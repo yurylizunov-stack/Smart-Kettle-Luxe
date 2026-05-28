@@ -51,6 +51,8 @@
   --sg-primary-2: rgba(49, 54, 56, 0.87);
   --sg-canvas: #eeeeee;
   --sg-page: #ffffff;
+  --ease-ui-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-ui-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 * {
@@ -472,6 +474,12 @@ body:has(.testing-page--two) {
   border-radius: 999px;
   background: transparent;
   cursor: pointer;
+  transition: transform 140ms var(--ease-ui-out), border-color 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.motion-copy-block__swatch:active {
+  transform: scale(0.94);
 }
 
 .motion-copy-block__swatch[aria-pressed='true'] {
@@ -744,6 +752,12 @@ body:has(.testing-page--two) {
   background: transparent;
   color: var(--sg-primary-1);
   cursor: pointer;
+  transition: transform 140ms var(--ease-ui-out), color 220ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.testing-nav__icon-button:active {
+  transform: scale(0.94);
 }
 
 .testing-nav__icon-button svg {
@@ -1556,12 +1570,14 @@ body:has(.testing-page--two) {
   pointer-events: none;
 }
 
-.testing-carousel__swatch:hover {
-  border-color: #bec0c2;
-}
+@media (hover: hover) and (pointer: fine) {
+  .testing-carousel__swatch:hover {
+    border-color: #bec0c2;
+  }
 
-.testing-carousel__swatch:hover::after {
-  border-color: #bec0c2;
+  .testing-carousel__swatch:hover::after {
+    border-color: #bec0c2;
+  }
 }
 
 .testing-carousel__swatch.is-selected,
@@ -2049,6 +2065,12 @@ body:has(.testing-page--two) {
   font-weight: 700;
   line-height: 24px;
   cursor: pointer;
+  transition: transform 140ms var(--ease-ui-out), background-color 180ms ease, color 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.testing-footer__signup-button:active {
+  transform: scale(0.98);
 }
 
 .testing-footer--reversed .testing-footer__signup-button {
@@ -5289,13 +5311,24 @@ body:has(.testing-page--two) {
   color: var(--sg-primary-1);
   background: transparent;
   cursor: pointer;
-  transition: border-color 180ms ease;
+  transition: transform 140ms var(--ease-ui-out), border-color 180ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.story-focused__swatch:hover,
 .story-focused__swatch:focus-visible {
   padding: 3px;
   border-color: rgba(49, 54, 56, 0.26);
+}
+
+.story-focused__swatch:active {
+  transform: scale(0.94);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .story-focused__swatch:hover {
+    padding: 3px;
+    border-color: rgba(49, 54, 56, 0.26);
+  }
 }
 
 .story-focused__swatch.is-selected {
@@ -5480,8 +5513,10 @@ body:has(.testing-page--two) {
   transition: background-color 220ms ease;
 }
 
-.story-focused__info-card:not(.is-open):hover {
-  background: #d7d7d7;
+@media (hover: hover) and (pointer: fine) {
+  .story-focused__info-card:not(.is-open):hover {
+    background: #d7d7d7;
+  }
 }
 
 .story-focused__info-card--tabs {
@@ -5490,8 +5525,10 @@ body:has(.testing-page--two) {
   background: #efefef;
 }
 
-.story-focused__info-card--tabs:hover {
-  background: #efefef;
+@media (hover: hover) and (pointer: fine) {
+  .story-focused__info-card--tabs:hover {
+    background: #efefef;
+  }
 }
 
 .story-focused__desktop-tablist {
@@ -5545,12 +5582,14 @@ body:has(.testing-page--two) {
   line-height: 1.6;
   text-align: left;
   cursor: pointer;
+  transition: transform 140ms var(--ease-ui-out);
   -webkit-tap-highlight-color: transparent;
 }
 
 .story-focused__info-header:hover,
 .story-focused__info-header:active {
   background: transparent;
+  transform: scale(0.995);
 }
 
 .story-focused__info-header:focus {
@@ -5582,7 +5621,7 @@ body:has(.testing-page--two) {
   background: currentColor;
   content: '';
   transform: translate(-50%, -50%);
-  transition: transform 280ms ease;
+  transition: transform 220ms var(--ease-ui-out);
 }
 
 .story-focused__info-icon::after {
@@ -5597,7 +5636,7 @@ body:has(.testing-page--two) {
   max-height: 0;
   overflow: hidden;
   opacity: 0;
-  transition: max-height 520ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms ease;
+  transition: max-height 420ms var(--ease-ui-out), opacity 220ms ease;
 }
 
 .story-focused__info-card.is-open .story-focused__info-panel {
@@ -6042,6 +6081,12 @@ body:has(.testing-page--two) {
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
+  transition: transform 140ms var(--ease-ui-out), border-color 180ms ease, background-color 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.story-focused__review-button:active {
+  transform: scale(0.98);
 }
 
 .story-focused__compare-panel {
@@ -6285,6 +6330,12 @@ body:has(.testing-page--two) {
   color: #313638;
   background: rgba(49, 54, 56, 0.1);
   cursor: pointer;
+  transition: transform 140ms var(--ease-ui-out), background-color 180ms ease, opacity 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.story-focused__compare-controls button:not(:disabled):active {
+  transform: scale(0.94);
 }
 
 .story-focused__compare-controls button:disabled {
@@ -6478,6 +6529,12 @@ body:has(.testing-page--two) {
   font-size: 16px;
   font-weight: 700;
   line-height: 24px;
+  transition: transform 140ms var(--ease-ui-out), background-color 180ms ease, color 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.story-focused__footer-newsletter button:active {
+  transform: scale(0.98);
 }
 
 .story-focused__footer-socials {
@@ -7434,6 +7491,12 @@ body:has(.testing-page--two) {
     background: #ffffff;
     color: #313638;
     cursor: pointer;
+    transition: transform 140ms var(--ease-ui-out);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .testing-mobile-bottom-nav__button:active {
+    transform: scale(0.97);
   }
 
   .testing-scroll__phrase-layer {
@@ -7819,7 +7882,7 @@ body:has(.testing-page--two) {
     height: 14px;
     background: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTciIGhlaWdodD0iMTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zz4KPHBhdGggZD0iTTE1LjUgMS41MDNsLTcgNy03LTciIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+") no-repeat;
     content: '';
-    transition: transform 500ms ease-in-out;
+    transition: transform 220ms var(--ease-ui-out);
   }
 
   .story-focused__footer-column button[aria-expanded="true"]::after {
@@ -7831,7 +7894,7 @@ body:has(.testing-page--two) {
     max-height: 0;
     overflow: hidden;
     visibility: hidden;
-    transition: visibility 500ms ease-in-out, padding 500ms ease-in-out, max-height 500ms ease-in-out;
+    transition: visibility 220ms var(--ease-ui-out), padding 220ms var(--ease-ui-out), max-height 300ms var(--ease-ui-out);
   }
 
   .story-focused__footer-column ul.is-open {
