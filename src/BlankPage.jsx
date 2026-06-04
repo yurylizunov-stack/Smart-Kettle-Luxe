@@ -1427,7 +1427,7 @@ export default function BlankPage() {
 
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = 'Luxe Design Experiment';
+    document.title = 'the Smart Kettle™ Luxe';
 
     return () => {
       document.title = previousTitle;
