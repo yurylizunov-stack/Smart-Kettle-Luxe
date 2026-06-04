@@ -1,10 +1,10 @@
 ﻿import React from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
-import MotionPage from './testing/MotionPage.jsx';
+import BlankPage from './BlankPage.jsx';
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <MotionPage />
+    <BlankPage />
   </React.StrictMode>,
 );

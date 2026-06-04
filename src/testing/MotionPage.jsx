@@ -192,18 +192,27 @@ function MotionDesktopNav() {
   );
 }
 
-function MotionHero() {
+export function MotionHero({
+  className = '',
+  desktopHeroSrc = '/assets/images/hero-kettle.png',
+  mobileHeroSrc,
+} = {}) {
+  const heroClassName = ['testing-scroll motion-hero', className].filter(Boolean).join(' ');
+
   return (
-    <section className="testing-scroll motion-hero" aria-label="Motion hero">
+    <section className={heroClassName} aria-label="Motion hero">
       <MotionMobileChrome />
       <MotionDesktopNav />
       <div className="testing-scroll__stage">
         <div className="testing-scroll__background">
-          <img
-            className="testing-scroll__hero-media"
-            src="/assets/images/hero-kettle.png"
-            alt="the Smart Kettle Luxe on a sculpted white pedestal"
-          />
+          <picture>
+            {mobileHeroSrc ? <source media="(max-width: 767px)" srcSet={mobileHeroSrc} /> : null}
+            <img
+              className="testing-scroll__hero-media"
+              src={desktopHeroSrc}
+              alt="the Smart Kettle Luxe on a sculpted white pedestal"
+            />
+          </picture>
           <div className="testing-scroll__hero-copy">
             <div className="testing-scroll__hero-headline-group">
               <p className="testing-scroll__hero-eyebrow">the Smart Kettle&trade; Luxe</p>
@@ -1972,7 +1981,7 @@ function MotionBottomGallery() {
   );
 }
 
-function MotionElevateStrip() {
+export function MotionElevateStrip() {
   const sectionRef = useRef(null);
   const viewportRef = useRef(null);
   const railRef = useRef(null);
@@ -1987,6 +1996,10 @@ function MotionElevateStrip() {
     }
 
     let draggable;
+    let revealFrame = 0;
+    let revealObserver;
+    let revealInterval = 0;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const getBounds = () => {
       const sectionWidth = viewport.clientWidth;
@@ -2009,6 +2022,25 @@ function MotionElevateStrip() {
       draggable?.applyBounds(bounds);
     };
 
+    const updateReveal = () => {
+      if (revealFrame) {
+        window.cancelAnimationFrame(revealFrame);
+      }
+
+      revealFrame = window.requestAnimationFrame(() => {
+        revealFrame = 0;
+
+        if (reduceMotion) {
+          section.classList.add('is-visible');
+          return;
+        }
+
+        const rect = section.getBoundingClientRect();
+        const shouldReveal = rect.top <= window.innerHeight * 0.78 && rect.bottom >= window.innerHeight * 0.18;
+        section.classList.toggle('is-visible', shouldReveal);
+      });
+    };
+
     const context = gsap.context(() => {
       gsap.set(rail, { x: 0, force3D: true });
 
@@ -2026,10 +2058,36 @@ function MotionElevateStrip() {
       applyBounds();
     }, section);
 
+    section.classList.add('motion-elevate-strip--animated');
+    updateReveal();
+
+    if ('IntersectionObserver' in window) {
+      revealObserver = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        section.classList.toggle('is-visible', reduceMotion || entry.isIntersecting);
+      }, {
+        rootMargin: '-18% 0px -18% 0px',
+        threshold: [0, 0.1],
+      });
+      revealObserver.observe(section);
+    }
+
+    revealInterval = window.setInterval(updateReveal, 160);
     window.addEventListener('resize', applyBounds);
+    window.addEventListener('resize', updateReveal);
+    window.addEventListener('scroll', updateReveal, { passive: true });
+    window.addEventListener('blank:smooth-scroll', updateReveal);
 
     return () => {
       window.removeEventListener('resize', applyBounds);
+      window.removeEventListener('resize', updateReveal);
+      window.removeEventListener('scroll', updateReveal);
+      window.removeEventListener('blank:smooth-scroll', updateReveal);
+      window.clearInterval(revealInterval);
+      revealObserver?.disconnect();
+      if (revealFrame) {
+        window.cancelAnimationFrame(revealFrame);
+      }
       draggable?.kill();
       context.revert();
     };
@@ -2044,8 +2102,16 @@ function MotionElevateStrip() {
     >
       <div className="motion-elevate-strip__heading" data-node-id="10314:11992">
         <h2>
-          <span className="motion-elevate-strip__headline-medium">Designed to</span>{' '}
-          <span className="motion-elevate-strip__headline-italic">Elevate your Space.</span>
+          <span className="motion-elevate-strip__line-mask">
+            <span className="motion-elevate-strip__line-inner motion-elevate-strip__headline-medium">
+              Designed to
+            </span>
+          </span>
+          <span className="motion-elevate-strip__line-mask">
+            <span className="motion-elevate-strip__line-inner motion-elevate-strip__headline-italic">
+              Elevate your Space.
+            </span>
+          </span>
         </h2>
       </div>
 
