@@ -190,15 +190,15 @@ const softLidFramePath = (frame) => (
 );
 const desktopSoftOpeningEndFrame = 300;
 const desktopSoftOpeningScrubEndProgress = 0.72;
-const desktopSoftOpeningCopyChangeFrame = 126;
-const desktopSoftOpeningCopyChangeDuration = 14;
+const desktopSoftOpeningCopyChangeFrame = 49;
+const desktopSoftOpeningCopyChangeDuration = 28;
 const desktopSoftOpeningFramePath = (frame) => (
   `/assets/sequences/soft_open_lid/lid_${String(frame).padStart(5, '0')}.jpg`
 );
-const desktopVarietalEndFrame = 72;
+const desktopVarietalEndFrame = 71;
 const desktopVarietalScrubEndProgress = 0.72;
 const desktopVarietalFramePath = (frame) => (
-  `/assets/sequences/plank_3/plank_${String(frame).padStart(5, '0')}.jpg`
+  `/assets/sequences/plank_4/plank_${String(frame).padStart(5, '0')}.jpg`
 );
 const desktopKeepWarmEndFrame = 72;
 const desktopKeepWarmScrubEndProgress = 0.72;
@@ -1470,10 +1470,38 @@ function BlankDesktopVarietalIntro() {
     }
 
     const context = gsap.context(() => {
+      const media = section.querySelector('.blank-varietal-intro__media');
       const setProgressFrame = (progress) => {
         const scrubProgress = gsap.utils.clamp(0, 1, progress / desktopVarietalScrubEndProgress);
         drawFrame(scrubProgress * desktopVarietalEndFrame);
       };
+
+      if (media) {
+        const setEntryPosition = (progress) => {
+          const entryProgress = gsap.utils.clamp(0, 1, progress);
+          const y = gsap.utils.interpolate(window.innerHeight * 0.55, 0, entryProgress);
+
+          gsap.set(media, { y, overwrite: 'auto' });
+        };
+        const getEntryProgress = () => (
+          1 - section.getBoundingClientRect().top / window.innerHeight
+        );
+
+        setEntryPosition(getEntryProgress());
+        gsap.delayedCall(0, () => setEntryPosition(getEntryProgress()));
+
+        ScrollTrigger.create({
+          trigger: section,
+          start: 'top bottom',
+          end: 'top top',
+          scrub: 0.8,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => setEntryPosition(self.progress),
+          onRefresh: () => setEntryPosition(getEntryProgress()),
+          onLeave: () => setEntryPosition(1),
+          onLeaveBack: () => setEntryPosition(0),
+        });
+      }
 
       ScrollTrigger.create({
         trigger: section,
@@ -1506,7 +1534,7 @@ function BlankDesktopVarietalIntro() {
       ref={sectionRef}
     >
       <div className="blank-varietal-intro__stage">
-        <div className="blank-varietal-intro__media" data-node-id="10645:1144" data-name="plank_3 sequence">
+        <div className="blank-varietal-intro__media" data-node-id="10645:1144" data-name="plank_4 sequence">
           <img
             src={desktopVarietalFramePath(0)}
             alt=""
@@ -2344,11 +2372,18 @@ function BlankDesktopTechSpecs() {
 
         drawFrame(scrubProgress * desktopTechSpecsEndFrame);
       };
+      const getScrubDistance = () => {
+        const sectionRect = section.getBoundingClientRect();
+        const imageRect = image.getBoundingClientRect();
+        const distanceBeforeImageExit = imageRect.top - sectionRect.top;
+
+        return Math.max(1, Math.floor(distanceBeforeImageExit - 1));
+      };
 
       ScrollTrigger.create({
         trigger: section,
-        start: 'top bottom',
-        end: 'bottom top',
+        start: 'top top',
+        end: () => `+=${getScrubDistance()}`,
         scrub: 0.55,
         invalidateOnRefresh: true,
         onUpdate: (self) => setProgressFrame(self.progress),
@@ -3176,7 +3211,7 @@ export default function BlankPage({
         dataName="Gallery Before Header"
         isPlaceholder
         placeholderVideo={{
-          desktop: '/assets/videos/desktop_warm.mp4',
+          desktop: '/assets/videos/desktop_warm_1920.mp4',
           mobile: '/assets/videos/mobile_warm.mp4',
           label: 'Smart Kettle Luxe warm lifestyle video',
         }}

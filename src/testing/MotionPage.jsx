@@ -2114,7 +2114,7 @@ export function MotionElevateStrip({ afterHeading = null, showHeading = true, sh
           }, 0)
           .to(heading, {
             autoAlpha: 0,
-            duration: 1,
+            duration: 0.72,
             ease: 'sine.inOut',
           }, 0);
       }
