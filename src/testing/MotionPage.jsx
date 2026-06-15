@@ -1981,7 +1981,7 @@ function MotionBottomGallery() {
   );
 }
 
-export function MotionElevateStrip() {
+export function MotionElevateStrip({ afterHeading = null, showHeading = true, showRail = true } = {}) {
   const sectionRef = useRef(null);
   const viewportRef = useRef(null);
   const railRef = useRef(null);
@@ -1991,7 +1991,7 @@ export function MotionElevateStrip() {
     const viewport = viewportRef.current;
     const rail = railRef.current;
 
-    if (!section || !viewport || !rail) {
+    if (!section) {
       return undefined;
     }
 
@@ -2000,8 +2000,16 @@ export function MotionElevateStrip() {
     let revealObserver;
     let revealInterval = 0;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const hasColorHandoff = showHeading && !showRail && Boolean(afterHeading);
 
     const getBounds = () => {
+      if (!viewport || !rail) {
+        return {
+          minX: 0,
+          maxX: 0,
+        };
+      }
+
       const sectionWidth = viewport.clientWidth;
       const railWidth = rail.scrollWidth;
       const minX = Math.min(0, sectionWidth - railWidth);
@@ -2013,6 +2021,10 @@ export function MotionElevateStrip() {
     };
 
     const applyBounds = () => {
+      if (!viewport || !rail) {
+        return;
+      }
+
       const bounds = getBounds();
 
       gsap.set(rail, {
@@ -2042,20 +2054,70 @@ export function MotionElevateStrip() {
     };
 
     const context = gsap.context(() => {
-      gsap.set(rail, { x: 0, force3D: true });
+      if (viewport && rail) {
+        gsap.set(rail, { x: 0, force3D: true });
 
-      [draggable] = Draggable.create(rail, {
-        type: 'x',
-        bounds: getBounds(),
-        inertia: true,
-        edgeResistance: 0.86,
-        cursor: 'grab',
-        activeCursor: 'grabbing',
-        allowNativeTouchScrolling: true,
-        zIndexBoost: false,
-      });
+        [draggable] = Draggable.create(rail, {
+          type: 'x',
+          bounds: getBounds(),
+          inertia: true,
+          edgeResistance: 0.86,
+          cursor: 'grab',
+          activeCursor: 'grabbing',
+          allowNativeTouchScrolling: true,
+          zIndexBoost: false,
+        });
 
-      applyBounds();
+        applyBounds();
+      }
+
+      if (hasColorHandoff) {
+        const heading = section.querySelector('.motion-elevate-strip__heading');
+        const headingText = section.querySelector('.motion-elevate-strip__heading h2');
+        const colorSelector = section.querySelector('.blank-color-selector');
+        const colorInner = section.querySelector('.blank-color-selector__inner');
+        const colorHero = section.querySelector('.blank-color-selector__hero');
+        const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+
+        if (!heading || !headingText || !colorSelector || !colorInner || !colorHero || !isDesktop) {
+          return;
+        }
+
+        if (reduceMotion) {
+          gsap.set([heading, headingText, colorInner, colorHero], { clearProps: 'all' });
+          return;
+        }
+
+        gsap.set(heading, { autoAlpha: 1 });
+        gsap.set(headingText, { clearProps: 'transform' });
+        gsap.set(colorInner, {
+          scale: 0.72,
+          transformOrigin: '50% 50%',
+          force3D: true,
+        });
+        gsap.set(colorHero, { clearProps: 'transform' });
+
+        gsap.timeline({
+          scrollTrigger: {
+            trigger: colorSelector,
+            start: 'top bottom',
+            end: 'top top',
+            scrub: 0.7,
+            invalidateOnRefresh: true,
+          },
+        })
+          .to(colorInner, {
+            scale: 1,
+            y: () => Math.max(0, (window.innerHeight - colorInner.offsetHeight) / 2),
+            duration: 1,
+            ease: 'sine.inOut',
+          }, 0)
+          .to(heading, {
+            autoAlpha: 0,
+            duration: 1,
+            ease: 'sine.inOut',
+          }, 0);
+      }
     }, section);
 
     section.classList.add('motion-elevate-strip--animated');
@@ -2072,7 +2134,9 @@ export function MotionElevateStrip() {
       revealObserver.observe(section);
     }
 
-    revealInterval = window.setInterval(updateReveal, 160);
+    revealInterval = window.setInterval(() => {
+      updateReveal();
+    }, 160);
     window.addEventListener('resize', applyBounds);
     window.addEventListener('resize', updateReveal);
     window.addEventListener('scroll', updateReveal, { passive: true });
@@ -2095,38 +2159,44 @@ export function MotionElevateStrip() {
 
   return (
     <section
-      className="motion-elevate-strip"
+      className={`motion-elevate-strip${afterHeading ? ' motion-elevate-strip--with-after-heading' : ''}${!showHeading ? ' motion-elevate-strip--rail-only' : ''}${!showRail ? ' motion-elevate-strip--without-rail' : ''}`}
       data-node-id="10314:11990"
       aria-label="Designed to Elevate your Space"
       ref={sectionRef}
     >
-      <div className="motion-elevate-strip__heading" data-node-id="10314:11992">
-        <h2>
-          <span className="motion-elevate-strip__line-mask">
-            <span className="motion-elevate-strip__line-inner motion-elevate-strip__headline-medium">
-              Designed to
+      {showHeading ? (
+        <div className="motion-elevate-strip__heading" data-node-id="10314:11992">
+          <h2>
+            <span className="motion-elevate-strip__line-mask">
+              <span className="motion-elevate-strip__line-inner motion-elevate-strip__headline-medium">
+                Designed to
+              </span>
             </span>
-          </span>
-          <span className="motion-elevate-strip__line-mask">
-            <span className="motion-elevate-strip__line-inner motion-elevate-strip__headline-italic">
-              Elevate your Space.
+            <span className="motion-elevate-strip__line-mask">
+              <span className="motion-elevate-strip__line-inner motion-elevate-strip__headline-italic">
+                Elevate your Space.
+              </span>
             </span>
-          </span>
-        </h2>
-      </div>
-
-      <div className="motion-elevate-strip__viewport" ref={viewportRef}>
-        <div className="motion-elevate-strip__rail" data-node-id="10314:12076" aria-hidden="true" ref={railRef}>
-          {motionElevateImages.map((image, index) => (
-            <figure className="motion-elevate-strip__card" key={image.desktop}>
-              <picture>
-                <source media="(max-width: 767px)" srcSet={image.mobile} />
-                <img src={image.desktop} alt="" loading={index < 3 ? 'eager' : 'lazy'} />
-              </picture>
-            </figure>
-          ))}
+          </h2>
         </div>
-      </div>
+      ) : null}
+
+      {afterHeading}
+
+      {showRail ? (
+        <div className="motion-elevate-strip__viewport" ref={viewportRef}>
+          <div className="motion-elevate-strip__rail" data-node-id="10314:12076" aria-hidden="true" ref={railRef}>
+            {motionElevateImages.map((image, index) => (
+              <figure className="motion-elevate-strip__card" key={image.desktop}>
+                <picture>
+                  <source media="(max-width: 767px)" srcSet={image.mobile} />
+                  <img src={image.desktop} alt="" loading={index < 3 ? 'eager' : 'lazy'} />
+                </picture>
+              </figure>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

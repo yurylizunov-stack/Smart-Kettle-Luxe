@@ -316,7 +316,10 @@ export function TestingFooter({ variant = 'default' }) {
         <div className="testing-footer__link-columns">
           {testingFooterColumns.map((column) => (
             <nav className="testing-footer__column" aria-label={column.title} key={column.title}>
-              <h2>{column.title}</h2>
+              <h2>
+                <span className="testing-footer__column-title">{column.title}</span>
+                <span className="testing-footer__column-mobile-title">Example text</span>
+              </h2>
               {column.links.map((link) => (
                 <a href="/" key={link}>
                   {link}
