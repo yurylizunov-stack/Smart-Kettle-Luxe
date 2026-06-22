@@ -5,6 +5,7 @@ export default function Update2Page() {
   return (
     <BlankPage
       hideDesktopContextualMenu
+      showDesktopFeatureStory
       showDesktopVarietalIntro
       showDesktopKeepWarmIntro
       showDesktopSoftOpeningIntro

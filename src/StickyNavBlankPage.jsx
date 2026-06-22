@@ -127,7 +127,7 @@ export default function StickyNavBlankPage() {
   );
 }
 
-function CompareTakeover({ onClose }) {
+export function CompareTakeover({ onClose }) {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [isMobileCompare, setIsMobileCompare] = useState(false);
   const dragRef = useRef({
@@ -141,13 +141,20 @@ function CompareTakeover({ onClose }) {
   useEffect(() => {
     const previousBodyOverflow = document.body.style.overflow;
     const previousHtmlOverflow = document.documentElement.style.overflow;
+    const smoothScrollController = window.__lenis;
+    const wasSmoothScrollStopped = document.documentElement.classList.contains('lenis-stopped');
 
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    smoothScrollController?.stop?.();
 
     return () => {
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousHtmlOverflow;
+
+      if (!wasSmoothScrollStopped) {
+        smoothScrollController?.start?.();
+      }
     };
   }, []);
 

@@ -1,38 +1,17 @@
 import React, { useEffect, useState } from 'react';
 
-function IconSearch() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="10.7" cy="10.7" r="6.2" />
-      <path d="M15.3 15.3 20 20" />
-    </svg>
-  );
-}
+const HERO_HEADER_ASSET_ROOT = '/assets/images/review-highlights/header';
 
-function IconAccount() {
+function HeaderIcon({ name }) {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="8" r="3.4" />
-      <path d="M5.5 20c.9-3.4 3.1-5.1 6.5-5.1s5.6 1.7 6.5 5.1" />
-    </svg>
-  );
-}
-
-function IconCart() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6.5 7.5h11l-1 12h-9z" />
-      <path d="M9 7.5a3 3 0 0 1 6 0" />
-    </svg>
+    <img src={`${HERO_HEADER_ASSET_ROOT}/${name}.svg`} alt="" aria-hidden="true" />
   );
 }
 
 function IconMenu() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 7h14" />
-      <path d="M5 12h14" />
-      <path d="M5 17h14" />
+      <path d="M4 7h16M4 12h16M4 17h16" />
     </svg>
   );
 }
@@ -55,13 +34,13 @@ export function HeroOnlyHeader() {
 
         <div className="hero-only-header__actions" aria-label="Quick links">
           <button className="hero-only-header__icon-button" type="button" aria-label="Search">
-            <IconSearch />
+            <HeaderIcon name="search" />
           </button>
           <button className="hero-only-header__icon-button" type="button" aria-label="Account">
-            <IconAccount />
+            <HeaderIcon name="user" />
           </button>
           <button className="hero-only-header__icon-button" type="button" aria-label="Cart">
-            <IconCart />
+            <HeaderIcon name="cart" />
           </button>
         </div>
       </nav>
@@ -73,10 +52,10 @@ export function HeroOnlyHeader() {
 
         <div className="hero-only-header__actions" aria-label="Quick links">
           <button className="hero-only-header__icon-button" type="button" aria-label="Search">
-            <IconSearch />
+            <HeaderIcon name="search" />
           </button>
           <button className="hero-only-header__icon-button" type="button" aria-label="Cart">
-            <IconCart />
+            <HeaderIcon name="cart" />
           </button>
           <button className="hero-only-header__icon-button" type="button" aria-label="Menu">
             <IconMenu />

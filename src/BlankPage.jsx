@@ -3,17 +3,37 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ContextualMenu from './ContextualMenu.jsx';
 import { HeroOnlyHeader } from './HeroOnlyPage.jsx';
+import { CompareTakeover } from './StickyNavBlankPage.jsx';
 import { MotionElevateStrip } from './testing/MotionPage.jsx';
 import { TestingFooter } from './testing/MotionSupport.jsx';
 
 gsap.registerPlugin(ScrollTrigger);
 
 function BlankHeroOnlySection() {
+  const heroOverlay = 0.1;
+  const overlayStops = {
+    top: heroOverlay,
+    mid: heroOverlay * 0.45,
+    bottom: heroOverlay * 1.75,
+  };
+
   return (
     <>
       <HeroOnlyHeader />
 
-      <section className="blank-hero hero-only" aria-label="the Smart Kettle Luxe">
+      <section
+        className="blank-hero hero-only"
+        aria-label="the Smart Kettle Luxe"
+        style={{
+          '--hero-overlay-top': overlayStops.top,
+          '--hero-overlay-mid': overlayStops.mid,
+          '--hero-overlay-bottom': overlayStops.bottom,
+          '--hero-text-shadow-opacity': 0,
+          '--hero-text-weight': 500,
+          '--hero-headline-gap': '19px',
+          '--hero-copy-gap': '19px',
+        }}
+      >
         <div className="hero-only__stage">
           <video
             className="hero-only__video hero-only__video--desktop"
@@ -40,9 +60,11 @@ function BlankHeroOnlySection() {
           </video>
 
           <div className="hero-only__copy">
-            <p className="hero-only__eyebrow">the Smart Kettle&trade; Luxe</p>
-            <h1 className="hero-only__title">Brew Intelligently</h1>
-            <a className="hero-only__cta" href="#shop">Shop now</a>
+            <div className="hero-only__headline">
+              <p className="hero-only__eyebrow">the Smart Kettle&trade; Luxe</p>
+              <h1 className="hero-only__title">Brew Intelligently</h1>
+            </div>
+            <p className="hero-only__scroll">Scroll to Discover</p>
           </div>
         </div>
       </section>
@@ -189,6 +211,7 @@ const softLidFramePath = (frame) => (
   `/assets/sequences/features-b-straight/frame_${String(frame).padStart(4, '0')}.jpg`
 );
 const desktopSoftOpeningEndFrame = 300;
+const desktopSoftOpeningFeatureStoryEndFrame = 94;
 const desktopSoftOpeningScrubEndProgress = 0.72;
 const desktopSoftOpeningCopyChangeFrame = 49;
 const desktopSoftOpeningCopyChangeDuration = 28;
@@ -198,7 +221,7 @@ const desktopSoftOpeningFramePath = (frame) => (
 const desktopVarietalEndFrame = 71;
 const desktopVarietalScrubEndProgress = 0.72;
 const desktopVarietalFramePath = (frame) => (
-  `/assets/sequences/plank_4/plank_${String(frame).padStart(5, '0')}.jpg`
+  `/assets/sequences/plank_5/plank_${String(frame).padStart(5, '0')}.jpg`
 );
 const desktopKeepWarmEndFrame = 72;
 const desktopKeepWarmScrubEndProgress = 0.72;
@@ -208,6 +231,60 @@ const desktopKeepWarmFramePath = (frame) => (
 const mobileKeepWarmFramePath = (frame) => (
   `/assets/sequences/side_hand/side_hand_${String(frame).padStart(5, '0')}.jpg`
 );
+
+const desktopFeatureStoryItems = [
+  {
+    title: '5 Varietal Settings',
+    copy: 'Pre-programmed and customizable One-touch functionalities create ideal brewing conditions for Black, Green, White or Oolong teas and French Press Coffee.',
+    framePath: desktopVarietalFramePath,
+    endFrame: desktopVarietalEndFrame,
+    scrubEndProgress: desktopVarietalScrubEndProgress,
+    mediaClassName: 'blank-desktop-feature-story__media--varietal',
+  },
+  {
+    title: 'Keep Warm Button',
+    copy: 'One-touch functionality keeps your water warm for 20 minutes and can be activated before during or on completion of the water heating cycle.',
+    framePath: desktopKeepWarmFramePath,
+    endFrame: desktopKeepWarmEndFrame,
+    scrubEndProgress: desktopKeepWarmScrubEndProgress,
+    mediaClassName: 'blank-desktop-feature-story__media--keep-warm',
+  },
+  {
+    title: 'Soft Opening™ Lid',
+    copy: 'A bubbling brew presents a few hazards on the way from kettle to cup. This specialized lid gently releases steam and eliminates splashing.',
+    framePath: desktopSoftOpeningFramePath,
+    endFrame: desktopSoftOpeningFeatureStoryEndFrame,
+    scrubEndProgress: desktopSoftOpeningScrubEndProgress,
+    mediaClassName: 'blank-desktop-feature-story__media--soft-opening',
+  },
+  {
+    title: 'BPA Free Material',
+    copy: "Dual sided, high visibility water windows make it easy to make sure you don't heat more water than you need. Made from BPA Free materials.",
+    framePath: desktopSoftOpeningFramePath,
+    startFrame: 95,
+    endFrame: desktopSoftOpeningEndFrame,
+    scrubEndProgress: desktopSoftOpeningScrubEndProgress,
+    seamlessMediaFromPrevious: true,
+    mediaClassName: 'blank-desktop-feature-story__media--bpa',
+  },
+];
+
+const desktopFeatureWebpFramePath = (featureNumber) => {
+  const filePrefix = featureNumber === 1 ? 'feature 1' : `feature_${featureNumber}`;
+
+  return (frame) => (
+    `/assets/sequences/feature_${featureNumber}_webp/${filePrefix}_${String(frame).padStart(5, '0')}.webp`
+  );
+};
+
+const desktopFeatureStoryWebpItems = desktopFeatureStoryItems.map((item, index) => ({
+  ...item,
+  framePath: desktopFeatureWebpFramePath(index + 1),
+  startFrame: 0,
+  endFrame: [187, 96, 241, 169][index],
+  seamlessMediaFromPrevious: false,
+}));
+
 const techSpecsExplodedEndFrame = 24;
 const techSpecsExplodedStartFrame = 2;
 const techSpecsExplodedFramePath = (frame) => (
@@ -300,6 +377,288 @@ function useBlankDragScroll() {
   };
 }
 
+const blankStickyHeaderTabs = [
+  ['Overview', 'overview'],
+  ['Features', 'features'],
+  ['Specs', 'specs'],
+  ['Reviews', 'reviews'],
+  ['Support', 'support'],
+  ['Faqs', 'faqs'],
+];
+
+function BlankStickyTrimmedText({ children }) {
+  return (
+    <span className="blank-product-sticky-header__trimmed-text">
+      {children}
+    </span>
+  );
+}
+
+function BlankProductStickyHeader({ onCompareOpen }) {
+  const [activeSectionId, setActiveSectionId] = useState(blankStickyHeaderTabs[0][1]);
+
+  useEffect(() => {
+    let rafId = null;
+
+    const updateActiveSection = () => {
+      rafId = null;
+
+      const anchorY = window.scrollY + Math.min(window.innerHeight * 0.35, 420);
+      const nextActiveTab = blankStickyHeaderTabs.reduce((activeTab, tab) => {
+        const [, targetId] = tab;
+        const target = document.getElementById(targetId);
+
+        if (!target) {
+          return activeTab;
+        }
+
+        const targetTop = target.getBoundingClientRect().top + window.scrollY;
+
+        return targetTop <= anchorY ? tab : activeTab;
+      }, blankStickyHeaderTabs[0]);
+
+      setActiveSectionId((currentSectionId) => (
+        currentSectionId === nextActiveTab[1] ? currentSectionId : nextActiveTab[1]
+      ));
+    };
+
+    const requestActiveSectionUpdate = () => {
+      if (rafId !== null) {
+        return;
+      }
+
+      rafId = window.requestAnimationFrame(updateActiveSection);
+    };
+
+    updateActiveSection();
+
+    window.addEventListener('scroll', requestActiveSectionUpdate, { passive: true });
+    window.addEventListener('resize', requestActiveSectionUpdate);
+    window.addEventListener('blank:smooth-scroll', requestActiveSectionUpdate);
+    window.addEventListener('hashchange', requestActiveSectionUpdate);
+
+    return () => {
+      window.removeEventListener('scroll', requestActiveSectionUpdate);
+      window.removeEventListener('resize', requestActiveSectionUpdate);
+      window.removeEventListener('blank:smooth-scroll', requestActiveSectionUpdate);
+      window.removeEventListener('hashchange', requestActiveSectionUpdate);
+
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
+    };
+  }, []);
+
+  const handleSectionLinkClick = (event, targetId) => {
+    const target = document.getElementById(targetId);
+
+    if (!target) {
+      return;
+    }
+
+    event.preventDefault();
+    setActiveSectionId(targetId);
+
+    const targetTop = Math.max(0, target.getBoundingClientRect().top + window.scrollY - 96);
+
+    if (window.__lenis?.scrollTo) {
+      window.__lenis.scrollTo(targetTop);
+    } else {
+      window.scrollTo({
+        top: targetTop,
+        behavior: 'smooth',
+      });
+    }
+
+    window.history.pushState(null, '', `#${targetId}`);
+  };
+
+  return (
+    <div className="blank-product-sticky-header">
+      <nav className="blank-product-sticky-header__nav" aria-label="Product navigation">
+        <div className="blank-product-sticky-header__product">
+          <p className="blank-product-sticky-header__title">the Smart Kettle&trade; Luxe</p>
+          <button className="blank-product-sticky-header__compare" type="button" onClick={onCompareOpen}>
+            Compare Kettles
+          </button>
+        </div>
+
+        <div className="blank-product-sticky-header__tabs" aria-label="Page sections">
+          {blankStickyHeaderTabs.map(([tab, targetId]) => (
+            <a
+              className={`blank-product-sticky-header__tab${targetId === activeSectionId ? ' is-active' : ''}`}
+              href={`#${targetId}`}
+              onClick={(event) => handleSectionLinkClick(event, targetId)}
+              aria-current={targetId === activeSectionId ? 'page' : undefined}
+              key={tab}
+            >
+              <BlankStickyTrimmedText>{tab}</BlankStickyTrimmedText>
+            </a>
+          ))}
+        </div>
+
+        <div className="blank-product-sticky-header__commerce">
+          <a className="blank-product-sticky-header__shop" href="#shop">
+            <BlankStickyTrimmedText>Shop now</BlankStickyTrimmedText>
+          </a>
+          <div className="blank-product-sticky-header__price-lockup">
+            <span className="blank-product-sticky-header__price">$219.95</span>
+            <img
+              className="blank-product-sticky-header__stars"
+              src="/assets/images/figma-sticky-nav-stars.svg"
+              alt="4.5 out of 5 stars"
+            />
+          </div>
+        </div>
+      </nav>
+    </div>
+  );
+}
+
+function BlankSurfaceBuyPill({ isVisible = false, onCompareOpen, onExpandedChange }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const closeTimeoutRef = useRef(0);
+
+  useEffect(() => {
+    if (!isVisible) {
+      window.clearTimeout(closeTimeoutRef.current);
+      setIsClosing(false);
+      setIsExpanded(false);
+    }
+  }, [isVisible]);
+
+  useEffect(() => {
+    return () => window.clearTimeout(closeTimeoutRef.current);
+  }, []);
+
+  useEffect(() => {
+    onExpandedChange?.(isExpanded && isVisible);
+  }, [isExpanded, isVisible, onExpandedChange]);
+
+  const handleExploreClick = () => {
+    window.clearTimeout(closeTimeoutRef.current);
+    setIsClosing(false);
+    setIsExpanded(true);
+  };
+
+  const handleExpandedLinkClick = () => {
+    window.clearTimeout(closeTimeoutRef.current);
+    setIsClosing(false);
+    setIsExpanded(false);
+  };
+
+  const handleCloseClick = () => {
+    window.clearTimeout(closeTimeoutRef.current);
+    setIsClosing(true);
+
+    closeTimeoutRef.current = window.setTimeout(() => {
+      setIsExpanded(false);
+      setIsClosing(false);
+    }, 260);
+  };
+
+  return (
+    <aside
+      className={`blank-surface-buy-pill${isVisible ? ' is-visible' : ''}${isExpanded ? ' is-expanded' : ''}${isClosing ? ' is-closing' : ''}`}
+      aria-label="Purchase the Smart Kettle Luxe"
+    >
+      <div className="blank-surface-buy-pill__compact" aria-hidden={isExpanded || isClosing}>
+        <div className="blank-surface-buy-pill__copy">
+          <span>the Smart Kettle&trade; Luxe</span>
+          <strong>$219.95</strong>
+        </div>
+        <button
+          className="blank-surface-buy-pill__explore"
+          type="button"
+          aria-expanded={isExpanded}
+          onClick={handleExploreClick}
+        >
+          <span>Explore</span>
+        </button>
+        <a className="blank-surface-buy-pill__button" href="/product-detail">
+          <span>Buy</span>
+        </a>
+      </div>
+
+      <div className="blank-surface-buy-pill__expanded" aria-hidden={!isExpanded}>
+        <button
+          className="blank-surface-buy-pill__close"
+          type="button"
+          aria-label="Close explore menu"
+          onClick={handleCloseClick}
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+
+        <h2>the Smart Kettle&trade; Luxe</h2>
+
+        <div className="blank-surface-buy-pill__menu">
+          <nav className="blank-surface-buy-pill__jump" aria-label="Jump to main sections">
+            <span>Jump to</span>
+            {[
+              ['Overview', 'overview'],
+              ['Features', 'features'],
+              ['Specs', 'specs'],
+            ].map(([label, targetId]) => (
+              <a href={`#${targetId}`} onClick={handleExpandedLinkClick} key={targetId}>
+                {label}
+              </a>
+            ))}
+          </nav>
+
+          <nav className="blank-surface-buy-pill__jump blank-surface-buy-pill__jump--secondary" aria-label="Jump to more sections">
+            <span aria-hidden="true">Jump to</span>
+            {[
+              ['Reviews', 'reviews'],
+              ['FAQs', 'faqs'],
+            ].map(([label, targetId]) => (
+              <a href={`#${targetId}`} onClick={handleExpandedLinkClick} key={targetId}>
+                {label}
+              </a>
+            ))}
+          </nav>
+
+          <div className="blank-surface-buy-pill__more">
+            <span>Keep exploring</span>
+            <button
+              type="button"
+              onClick={() => {
+                setIsExpanded(false);
+                onCompareOpen?.();
+              }}
+            >
+              Compare kettles
+            </button>
+          </div>
+        </div>
+
+        <div className="blank-surface-buy-pill__product-area">
+          <img
+            className="blank-surface-buy-pill__product-image"
+            src="/assets/images/contextual-menu-kettle.png"
+            alt=""
+            aria-hidden="true"
+          />
+
+          <div className="blank-surface-buy-pill__purchase-row">
+            <div className="blank-surface-buy-pill__expanded-price">
+              <span>$219.95</span>
+              <span className="blank-surface-buy-pill__expanded-stars" aria-label="4.5 out of 5 stars">
+                &#9733;&#9733;&#9733;&#9733;&#9734;
+              </span>
+            </div>
+
+            <a className="blank-surface-buy-pill__expanded-buy" href="/product-detail">
+              <span>Buy</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 function BlankPrecisionSection() {
   const sectionRef = useRef(null);
 
@@ -318,9 +677,13 @@ function BlankPrecisionSection() {
       const copy = section.querySelector('.blank-precision__copy');
       const titleWords = Array.from(section.querySelectorAll('.blank-precision__title-word'));
       const copyLines = Array.from(section.querySelectorAll('.blank-precision__copy-line-inner'));
+      const stickyHeader = document.querySelector('.blank-product-sticky-header');
 
       if (reduceMotion) {
         gsap.set([stage, copy, ...titleWords, ...copyLines], { clearProps: 'all' });
+        if (stickyHeader) {
+          gsap.set(stickyHeader, { autoAlpha: 1, yPercent: 0 });
+        }
         return;
       }
 
@@ -430,6 +793,9 @@ function BlankPrecisionSection() {
       gsap.set(copyLines, isDesktopPrecisionLayout
         ? { autoAlpha: 0, yPercent: 112 }
         : { autoAlpha: 0, y: 18, yPercent: 0 });
+      if (stickyHeader) {
+        gsap.set(stickyHeader, { autoAlpha: 0, yPercent: -120 });
+      }
 
       const revealTiming = isDesktopPrecisionLayout
         ? {
@@ -472,6 +838,15 @@ function BlankPrecisionSection() {
         }, revealTiming.titleStart);
 
       if (isDesktopPrecisionLayout) {
+        if (stickyHeader) {
+          revealTimeline.to(stickyHeader, {
+            autoAlpha: 1,
+            yPercent: 0,
+            duration: revealTiming.copyDuration,
+            ease: 'sine.inOut',
+          }, revealTiming.copyStart);
+        }
+
         copyLines.forEach((line, index) => {
           revealTimeline.to(line, {
             autoAlpha: 1,
@@ -501,7 +876,7 @@ function BlankPrecisionSection() {
   }, []);
 
   return (
-    <section className="blank-precision" aria-label="Precision in every pour" ref={sectionRef}>
+    <section id="overview" className="blank-precision" aria-label="Precision in every pour" ref={sectionRef}>
       <div className="blank-precision__stage">
         <h2 className="blank-precision__title" data-node-id="10177:38606">
           <span className="blank-precision__title-mask">
@@ -1097,6 +1472,274 @@ function BlankGalleryHeaderSection() {
   );
 }
 
+function BlankDesktopFeatureStory({
+  items = desktopFeatureStoryItems,
+  sectionId = 'features',
+  className = '',
+  isEnabled = true,
+  shouldTransitionPage = true,
+  shouldAnimateVarietalPosition = true,
+} = {}) {
+  const sectionRef = useRef(null);
+  const imageRefs = useRef([]);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section || !isEnabled) {
+      return undefined;
+    }
+
+    const isMobileLayout = window.matchMedia('(max-width: 767px)').matches;
+
+    if (isMobileLayout) {
+      return undefined;
+    }
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const panels = Array.from(section.querySelectorAll('.blank-desktop-feature-story__panel'));
+    const navItems = Array.from(section.querySelectorAll('.blank-desktop-feature-story__nav-item'));
+    const chapterCount = items.length;
+    const segmentSize = 1 / chapterCount;
+
+    items.forEach((item) => {
+      if (!item.framePath) {
+        const staticImage = new Image();
+        staticImage.src = item.image;
+        if (staticImage.decode) {
+          staticImage.decode().catch(() => {});
+        }
+        return;
+      }
+
+      const startFrame = item.startFrame || 0;
+
+      Array.from({ length: item.endFrame - startFrame + 1 }, (_, index) => {
+        const frame = startFrame + index;
+        const sequenceImage = new Image();
+        sequenceImage.src = item.framePath(frame);
+        if (sequenceImage.decode) {
+          sequenceImage.decode().catch(() => {});
+        }
+        return sequenceImage;
+      });
+    });
+
+    const drawFrame = (item, image, localProgress) => {
+      if (!item.framePath || !image) {
+        return;
+      }
+
+      const startFrame = item.startFrame || 0;
+      const scrubProgress = gsap.utils.clamp(0, 1, localProgress / item.scrubEndProgress);
+      const frameIndex = gsap.utils.clamp(
+        startFrame,
+        item.endFrame,
+        Math.round(gsap.utils.interpolate(startFrame, item.endFrame, scrubProgress)),
+      );
+      const source = item.framePath(frameIndex);
+
+      if (image.getAttribute('src') !== source) {
+        image.src = source;
+      }
+
+      image.dataset.frame = String(frameIndex);
+    };
+
+    const setStoryProgress = (progress) => {
+      const clampedProgress = gsap.utils.clamp(0, 1, progress);
+      const activeIndex = gsap.utils.clamp(
+        0,
+        chapterCount - 1,
+        Math.floor(clampedProgress >= 1 ? chapterCount - 1 : clampedProgress / segmentSize),
+      );
+
+      items.forEach((item, index) => {
+        const panel = panels[index];
+        const navItem = navItems[index];
+        const start = index * segmentSize;
+        const hasSeamlessMediaFromPrevious = item.seamlessMediaFromPrevious;
+        const hasSeamlessMediaToNext = items[index + 1]?.seamlessMediaFromPrevious;
+        const localProgress = gsap.utils.clamp(0, 1, (clampedProgress - start) / segmentSize);
+        const fadeIn = index === 0 ? 1 : gsap.utils.clamp(0, 1, localProgress / 0.14);
+        const fadeOut = index === chapterCount - 1 ? 1 : gsap.utils.clamp(0, 1, (1 - localProgress) / 0.14);
+        const opacity = Math.min(fadeIn, fadeOut);
+        const copyOpacity = opacity;
+        let mediaOpacity = opacity;
+        const navProgress = index < activeIndex ? 1 : index > activeIndex ? 0 : localProgress;
+
+        if (hasSeamlessMediaToNext) {
+          mediaOpacity = clampedProgress >= start && clampedProgress < start + segmentSize ? 1 : 0;
+        } else if (hasSeamlessMediaFromPrevious) {
+          mediaOpacity = clampedProgress >= start ? 1 : 0;
+        }
+
+        drawFrame(item, imageRefs.current[index], localProgress);
+
+        if (panel) {
+          const media = panel.querySelector('.blank-desktop-feature-story__media');
+          const copy = panel.querySelector('.blank-desktop-feature-story__copy');
+
+          panel.classList.toggle('is-active', index === activeIndex);
+
+          gsap.set(panel, {
+            autoAlpha: Math.max(copyOpacity, mediaOpacity),
+            overwrite: 'auto',
+          });
+
+          gsap.set(media, {
+            autoAlpha: mediaOpacity,
+            overwrite: 'auto',
+          });
+
+          gsap.set(copy, {
+            autoAlpha: copyOpacity,
+            overwrite: 'auto',
+          });
+        }
+
+        if (navItem) {
+          navItem.classList.toggle('is-active', index === activeIndex);
+          navItem.style.setProperty('--blank-feature-story-progress', String(navProgress));
+        }
+      });
+    };
+
+    setStoryProgress(reduceMotion ? 1 : 0);
+
+    if (reduceMotion) {
+      return undefined;
+    }
+
+    const context = gsap.context(() => {
+      const page = section.closest('.blank-page');
+      const varietalImage = section.querySelector('.blank-desktop-feature-story__media--varietal img');
+
+      if (shouldTransitionPage && page) {
+        gsap.fromTo(
+          page,
+          { backgroundColor: '#ffffff' },
+          {
+            backgroundColor: '#efefef',
+            ease: 'none',
+            scrollTrigger: {
+              trigger: section,
+              start: 'top bottom',
+              end: 'top top',
+              scrub: 0.6,
+              invalidateOnRefresh: true,
+            },
+          },
+        );
+      }
+
+      if (shouldAnimateVarietalPosition && varietalImage) {
+        gsap.fromTo(
+          varietalImage,
+          { '--blank-varietal-object-y': '0%' },
+          {
+            '--blank-varietal-object-y': '50%',
+            ease: 'none',
+            scrollTrigger: {
+              trigger: section,
+              start: 'top bottom',
+              end: 'top top',
+              scrub: 0.6,
+              invalidateOnRefresh: true,
+            },
+          },
+        );
+      }
+
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top top',
+        end: () => `+=${Math.round(window.innerHeight * chapterCount * 1.35)}`,
+        pin: true,
+        scrub: 0.65,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => setStoryProgress(self.progress),
+        onRefresh: (self) => setStoryProgress(self.progress),
+        onLeave: () => setStoryProgress(1),
+        onLeaveBack: () => setStoryProgress(0),
+      });
+    }, section);
+
+    ScrollTrigger.refresh();
+
+    return () => context.revert();
+  }, [isEnabled, items, shouldAnimateVarietalPosition, shouldTransitionPage]);
+
+  const scrollToChapter = (index) => {
+    const section = sectionRef.current;
+
+    if (!section) {
+      return;
+    }
+
+    const chapterCount = items.length;
+    const scrollDistance = window.innerHeight * chapterCount * 1.35;
+    const targetProgress = index / chapterCount;
+    const targetTop = section.getBoundingClientRect().top + window.scrollY + (scrollDistance * targetProgress) + 4;
+
+    window.scrollTo({
+      top: targetTop,
+      behavior: 'smooth',
+    });
+  };
+
+  return (
+    <section
+      id={sectionId}
+      className={`blank-desktop-feature-story${className ? ` ${className}` : ''}${isEnabled ? '' : ' blank-desktop-feature-story--inactive'}`}
+      aria-label="Smart Kettle Luxe feature story"
+      ref={sectionRef}
+    >
+      <div className="blank-desktop-feature-story__stage">
+        {items.map((item, index) => (
+          <article
+            className={`blank-desktop-feature-story__panel${index === 0 ? ' is-active' : ''}`}
+            aria-label={item.title}
+            key={item.title}
+          >
+            <div className={`blank-desktop-feature-story__media ${item.mediaClassName}`}>
+              <img
+                src={item.framePath ? item.framePath(item.startFrame || 0) : item.image}
+                alt=""
+                aria-hidden="true"
+                data-frame={item.framePath ? String(item.startFrame || 0) : undefined}
+                ref={(node) => {
+                  imageRefs.current[index] = node;
+                }}
+              />
+            </div>
+            <div className="blank-desktop-feature-story__copy">
+              <h2>{item.title}</h2>
+              <p>{item.copy}</p>
+            </div>
+          </article>
+        ))}
+
+        <nav className="blank-desktop-feature-story__nav" aria-label="Feature story chapters">
+          {items.map((item, index) => (
+            <button
+              className={`blank-desktop-feature-story__nav-item${index === 0 ? ' is-active' : ''}`}
+              type="button"
+              onClick={() => scrollToChapter(index)}
+              key={item.title}
+            >
+              <span className="blank-desktop-feature-story__nav-line" aria-hidden="true" />
+              <span className="blank-desktop-feature-story__nav-label">
+                {String(index + 1).padStart(2, '0')}. {item.title.replace('™', '')}
+              </span>
+            </button>
+          ))}
+        </nav>
+      </div>
+    </section>
+  );
+}
+
 function BlankDesktopKeepWarmIntro() {
   const sectionRef = useRef(null);
   const imageRef = useRef(null);
@@ -1550,6 +2193,207 @@ function BlankDesktopVarietalIntro() {
             White or Oolong teas and French Press Coffee.
           </p>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function BlankMobileFeatureStory({
+  items = desktopFeatureStoryWebpItems,
+  sectionId = 'features-mobile-story',
+  className = '',
+  isEnabled = true,
+} = {}) {
+  const sectionRef = useRef(null);
+  const imageRefs = useRef([]);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section || !isEnabled) {
+      return undefined;
+    }
+
+    const isMobileLayout = window.matchMedia('(max-width: 767px)').matches;
+
+    if (!isMobileLayout) {
+      return undefined;
+    }
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const panels = Array.from(section.querySelectorAll('.blank-mobile-feature-story__panel'));
+    const navItems = Array.from(section.querySelectorAll('.blank-mobile-feature-story__nav-item'));
+    const chapterCount = items.length;
+    const segmentSize = 1 / chapterCount;
+
+    items.forEach((item) => {
+      if (!item.framePath) {
+        return;
+      }
+
+      const startFrame = item.startFrame || 0;
+
+      Array.from({ length: item.endFrame - startFrame + 1 }, (_, index) => {
+        const frame = startFrame + index;
+        const sequenceImage = new Image();
+        sequenceImage.src = item.framePath(frame);
+
+        if (sequenceImage.decode) {
+          sequenceImage.decode().catch(() => {});
+        }
+
+        return sequenceImage;
+      });
+    });
+
+    const drawFrame = (item, image, localProgress) => {
+      if (!item.framePath || !image) {
+        return;
+      }
+
+      const startFrame = item.startFrame || 0;
+      const scrubProgress = gsap.utils.clamp(0, 1, localProgress / item.scrubEndProgress);
+      const frameIndex = gsap.utils.clamp(
+        startFrame,
+        item.endFrame,
+        Math.round(gsap.utils.interpolate(startFrame, item.endFrame, scrubProgress)),
+      );
+      const source = item.framePath(frameIndex);
+
+      if (image.getAttribute('src') !== source) {
+        image.src = source;
+      }
+
+      image.dataset.frame = String(frameIndex);
+    };
+
+    const setStoryProgress = (progress) => {
+      const clampedProgress = gsap.utils.clamp(0, 1, progress);
+      const activeIndex = gsap.utils.clamp(
+        0,
+        chapterCount - 1,
+        Math.floor(clampedProgress >= 1 ? chapterCount - 1 : clampedProgress / segmentSize),
+      );
+
+      items.forEach((item, index) => {
+        const panel = panels[index];
+        const navItem = navItems[index];
+        const start = index * segmentSize;
+        const localProgress = gsap.utils.clamp(0, 1, (clampedProgress - start) / segmentSize);
+        const fadeIn = index === 0 ? 1 : gsap.utils.clamp(0, 1, localProgress / 0.16);
+        const fadeOut = index === chapterCount - 1 ? 1 : gsap.utils.clamp(0, 1, (1 - localProgress) / 0.16);
+        const opacity = Math.min(fadeIn, fadeOut);
+        const navProgress = index < activeIndex ? 1 : index > activeIndex ? 0 : localProgress;
+
+        drawFrame(item, imageRefs.current[index], localProgress);
+
+        if (panel) {
+          panel.classList.toggle('is-active', index === activeIndex);
+          gsap.set(panel, {
+            autoAlpha: opacity,
+            overwrite: 'auto',
+          });
+        }
+
+        if (navItem) {
+          navItem.classList.toggle('is-active', index === activeIndex);
+          navItem.style.setProperty('--blank-mobile-feature-story-progress', String(navProgress));
+        }
+      });
+    };
+
+    setStoryProgress(reduceMotion ? 1 : 0);
+
+    if (reduceMotion) {
+      return undefined;
+    }
+
+    const context = gsap.context(() => {
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top top',
+        end: () => `+=${Math.round(window.innerHeight * chapterCount * 1.45)}`,
+        pin: true,
+        scrub: 0.55,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => setStoryProgress(self.progress),
+        onRefresh: (self) => setStoryProgress(self.progress),
+        onLeave: () => setStoryProgress(1),
+        onLeaveBack: () => setStoryProgress(0),
+      });
+    }, section);
+
+    ScrollTrigger.refresh();
+
+    return () => context.revert();
+  }, [isEnabled, items]);
+
+  const scrollToChapter = (index) => {
+    const section = sectionRef.current;
+
+    if (!section) {
+      return;
+    }
+
+    const chapterCount = items.length;
+    const scrollDistance = window.innerHeight * chapterCount * 1.45;
+    const targetProgress = index / chapterCount;
+    const targetTop = section.getBoundingClientRect().top + window.scrollY + (scrollDistance * targetProgress) + 4;
+
+    window.scrollTo({
+      top: targetTop,
+      behavior: 'smooth',
+    });
+  };
+
+  return (
+    <section
+      id={sectionId}
+      className={`blank-mobile-feature-story${className ? ` ${className}` : ''}${isEnabled ? '' : ' blank-mobile-feature-story--inactive'}`}
+      aria-label="Mobile Smart Kettle Luxe feature story"
+      ref={sectionRef}
+    >
+      <div className="blank-mobile-feature-story__stage">
+        {items.map((item, index) => (
+          <article
+            className={`blank-mobile-feature-story__panel${index === 0 ? ' is-active' : ''}`}
+            aria-label={item.title}
+            key={item.title}
+          >
+            <div className={`blank-mobile-feature-story__media ${item.mediaClassName || ''}`}>
+              <img
+                src={item.framePath ? item.framePath(item.startFrame || 0) : item.image}
+                alt=""
+                aria-hidden="true"
+                data-frame={item.framePath ? String(item.startFrame || 0) : undefined}
+                ref={(node) => {
+                  imageRefs.current[index] = node;
+                }}
+              />
+            </div>
+            <div className="blank-mobile-feature-story__copy">
+              <h2>{item.title}</h2>
+              <p>{item.copy}</p>
+            </div>
+          </article>
+        ))}
+
+        <nav className="blank-mobile-feature-story__nav" aria-label="Mobile feature story chapters">
+          {items.map((item, index) => (
+            <button
+              className={`blank-mobile-feature-story__nav-item${index === 0 ? ' is-active' : ''}`}
+              type="button"
+              onClick={() => scrollToChapter(index)}
+              key={item.title}
+              aria-label={`Jump to ${item.title}`}
+            >
+              <span className="blank-mobile-feature-story__nav-line" aria-hidden="true" />
+              <span className="blank-mobile-feature-story__nav-label">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+            </button>
+          ))}
+        </nav>
       </div>
     </section>
   );
@@ -2205,9 +3049,65 @@ function BlankDebugPanel() {
   );
 }
 
+function BlankExperimentPanel({
+  isOpen,
+  featureDesignMode,
+  isContentWidthCapped,
+  onFeatureDesignModeChange,
+  onContentWidthCappedChange,
+  onClose,
+}) {
+  if (!isOpen) {
+    return null;
+  }
+
+  const featureOptions = [
+    ['original', 'Original'],
+    ['webp', 'New webp'],
+    ['both', 'Both'],
+  ];
+
+  return (
+    <aside className="blank-experiment-panel" aria-label="Update 3 debug panel">
+      <div className="blank-experiment-panel__header">
+        <p>Debug</p>
+        <button type="button" onClick={onClose} aria-label="Close debug panel">
+          Close
+        </button>
+      </div>
+
+      <div className="blank-experiment-panel__group">
+        <span className="blank-experiment-panel__label">Features</span>
+        <div className="blank-experiment-panel__segmented" role="group" aria-label="Feature design">
+          {featureOptions.map(([value, label]) => (
+            <button
+              className={featureDesignMode === value ? 'is-active' : ''}
+              type="button"
+              onClick={() => onFeatureDesignModeChange(value)}
+              key={value}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <label className="blank-experiment-panel__toggle">
+        <input
+          type="checkbox"
+          checked={isContentWidthCapped}
+          onChange={(event) => onContentWidthCappedChange(event.target.checked)}
+        />
+        <span>Cap lower sections to room image width</span>
+      </label>
+    </aside>
+  );
+}
+
 function BlankDesktopReviewHighlights() {
   return (
     <section
+      id="reviews"
       className="blank-review-highlights"
       data-node-id="10622:40572"
       data-name="Review Highlights"
@@ -2280,26 +3180,94 @@ function BlankDesktopReviewHighlights() {
 }
 
 function BlankDesktopWhatsIncluded() {
+  const sectionRef = useRef(null);
+  const [activeIncludedIndex, setActiveIncludedIndex] = useState(0);
+  const activeIncludedItem = includedHighlightCards[activeIncludedIndex] || includedHighlightCards[0];
+
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) {
+      return undefined;
+    }
+
+    const isMobileLayout = window.matchMedia('(max-width: 767px)').matches;
+
+    if (isMobileLayout) {
+      return undefined;
+    }
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduceMotion) {
+      setActiveIncludedIndex(0);
+      return undefined;
+    }
+
+    const context = gsap.context(() => {
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top center',
+        end: 'bottom center',
+        scrub: true,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          const nextIndex = gsap.utils.clamp(
+            0,
+            includedHighlightCards.length - 1,
+            Math.round(self.progress * (includedHighlightCards.length - 1)),
+          );
+
+          setActiveIncludedIndex((currentIndex) => (
+            currentIndex === nextIndex ? currentIndex : nextIndex
+          ));
+        },
+        onLeaveBack: () => setActiveIncludedIndex(0),
+        onLeave: () => setActiveIncludedIndex(includedHighlightCards.length - 1),
+      });
+    }, section);
+
+    ScrollTrigger.refresh();
+
+    return () => context.revert();
+  }, []);
+
   return (
     <section
       className="blank-included-highlights"
       data-node-id="10581:39986"
       data-name="Tabs [Specs]"
       aria-label="What's Included"
+      ref={sectionRef}
     >
-      <header className="blank-included-highlights__header" data-node-id="10581:39987">
-        <h2 data-node-id="10581:39988">What&rsquo;s Included</h2>
-      </header>
+      <div className="blank-included-highlights__showcase" data-node-id="10581:40000">
+        <div className="blank-included-highlights__copy-panel">
+          <h2 data-node-id="10581:39988">What&rsquo;s Included</h2>
+          <ol className="blank-included-highlights__item-list" aria-label="Included items">
+            {includedHighlightCards.map((item, index) => (
+              <li
+                className={index === activeIncludedIndex ? 'is-active' : ''}
+                data-node-id={item.labelNodeId}
+                key={item.label}
+              >
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <strong>{item.label}</strong>
+              </li>
+            ))}
+          </ol>
+        </div>
 
-      <div className="blank-included-highlights__divider" data-node-id="10581:39993" />
-
-      <div className="blank-included-highlights__cards" data-node-id="10581:40000">
-        {includedHighlightCards.map((item) => (
-          <article className="blank-included-highlights__card" data-node-id={item.nodeId} key={item.label}>
-            <img src={item.image} alt="" aria-hidden="true" />
-            <p data-node-id={item.labelNodeId}>{item.label}</p>
-          </article>
-        ))}
+        <figure className="blank-included-highlights__image-panel" data-node-id={activeIncludedItem.nodeId}>
+          {includedHighlightCards.map((item, index) => (
+            <img
+              className={index === activeIncludedIndex ? 'is-active' : ''}
+              src={item.image}
+              alt=""
+              aria-hidden="true"
+              key={item.label}
+            />
+          ))}
+        </figure>
       </div>
     </section>
   );
@@ -2324,7 +3292,7 @@ function BlankDesktopTechSpecs() {
     }
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let currentFrame = reduceMotion ? desktopTechSpecsEndFrame : 0;
+    let currentFrame = desktopTechSpecsEndFrame;
     const images = Array.from({ length: desktopTechSpecsEndFrame + 1 }, (_, frame) => {
       const sequenceImage = new Image();
       sequenceImage.src = desktopTechSpecsFramePath(frame);
@@ -2367,29 +3335,53 @@ function BlankDesktopTechSpecs() {
     }
 
     const context = gsap.context(() => {
-      const setProgressFrame = (progress) => {
+      const page = section.closest('.blank-page');
+      const specsOffset = document.querySelector('.blank-tech-specs-offset');
+      const transitionTargets = [page].filter(Boolean);
+
+      if (transitionTargets.length > 0) {
+        gsap.fromTo(
+          transitionTargets,
+          { backgroundColor: '#ffffff' },
+          {
+            backgroundColor: '#efefef',
+            ease: 'none',
+            scrollTrigger: {
+              trigger: specsOffset || section,
+              start: 'top bottom',
+              end: specsOffset ? 'bottom bottom' : 'top bottom',
+              scrub: true,
+              invalidateOnRefresh: true,
+            },
+          },
+        );
+      }
+
+      const setPinnedProgress = (progress) => {
         const scrubProgress = gsap.utils.clamp(0, 1, progress);
 
-        drawFrame(scrubProgress * desktopTechSpecsEndFrame);
+        drawFrame(desktopTechSpecsEndFrame - (scrubProgress * desktopTechSpecsEndFrame));
       };
-      const getScrubDistance = () => {
-        const sectionRect = section.getBoundingClientRect();
-        const imageRect = image.getBoundingClientRect();
-        const distanceBeforeImageExit = imageRect.top - sectionRect.top;
+      const getPinnedScrubDistance = () => Math.max(
+        window.innerHeight,
+        Math.round(window.innerHeight * 1.15),
+      );
 
-        return Math.max(1, Math.floor(distanceBeforeImageExit - 1));
-      };
+      setPinnedProgress(0);
 
       ScrollTrigger.create({
         trigger: section,
         start: 'top top',
-        end: () => `+=${getScrubDistance()}`,
+        end: () => `+=${getPinnedScrubDistance()}`,
+        pin: true,
+        pinSpacing: true,
+        anticipatePin: 1,
         scrub: 0.55,
         invalidateOnRefresh: true,
-        onUpdate: (self) => setProgressFrame(self.progress),
-        onRefresh: (self) => setProgressFrame(self.progress),
-        onLeave: () => drawFrame(desktopTechSpecsEndFrame),
-        onLeaveBack: () => drawFrame(0),
+        onUpdate: (self) => setPinnedProgress(self.progress),
+        onRefresh: (self) => setPinnedProgress(self.progress),
+        onLeave: () => setPinnedProgress(1),
+        onLeaveBack: () => setPinnedProgress(0),
       });
     }, section);
 
@@ -2403,6 +3395,7 @@ function BlankDesktopTechSpecs() {
 
   return (
     <section
+      id="specs"
       className="blank-tech-specs"
       data-node-id="10634:41302"
       data-name="Tabs [Specs]"
@@ -2416,6 +3409,14 @@ function BlankDesktopTechSpecs() {
       <div className="blank-tech-specs__divider" data-node-id="10634:41310" />
 
       <div className="blank-tech-specs__layout" data-node-id="10634:41311">
+        <figure className="blank-tech-specs__image-holder" data-node-id="10634:41321" aria-hidden="true">
+          <img
+            src={desktopTechSpecsFramePath(desktopTechSpecsEndFrame)}
+            alt=""
+            data-frame="0"
+            ref={imageRef}
+          />
+        </figure>
         <dl className="blank-tech-specs__list" data-node-id="10634:41315">
           {techSpecRows.map(([label, value], index) => (
             <div className="blank-tech-specs__row" data-node-id={`10634:${41316 + index}`} key={label}>
@@ -2424,14 +3425,6 @@ function BlankDesktopTechSpecs() {
             </div>
           ))}
         </dl>
-        <figure className="blank-tech-specs__image-holder" data-node-id="10634:41321" aria-hidden="true">
-          <img
-            src={desktopTechSpecsFramePath(0)}
-            alt=""
-            data-frame="0"
-            ref={imageRef}
-          />
-        </figure>
       </div>
     </section>
   );
@@ -2769,6 +3762,7 @@ function BlankMobileFAQ() {
 function BlankDesktopSupportDocumentation() {
   return (
     <section
+      id="support"
       className="blank-support-docs"
       data-node-id="10622:40690"
       data-name="Tabs [Specs]"
@@ -2783,45 +3777,46 @@ function BlankDesktopSupportDocumentation() {
 
       <div className="blank-support-docs__divider" data-node-id="10622:40697" />
 
-      <article className="blank-support-docs__hub" data-node-id="10654:1167">
-        <div className="blank-support-docs__hub-copy" data-node-id="10654:1182">
-          <div data-node-id="10654:1190">
-            <h3 data-node-id="10654:1183">Product Hub</h3>
-            <p data-node-id="10654:1189">Download setup, cleaning, and safety guidance.</p>
-          </div>
-          <img className="blank-support-docs__arrow" src="/assets/images/support-arrow-right.svg" alt="" aria-hidden="true" data-node-id="10654:1184" />
+      <div className="review-highlights-support blank-support-docs__buy-page-layout" data-node-id="10622:40698">
+        <div className="review-highlights-support__cards">
+          {[
+            {
+              title: 'Instruction Manual',
+              titleLines: ['Instruction', 'Manual'],
+              image: '/assets/images/review-highlights/support/instruction-manual.png',
+            },
+            {
+              title: 'Return Policies',
+              titleLines: ['Return', 'Policies'],
+              image: '/assets/images/review-highlights/support/return-policies.png',
+            },
+          ].map((item) => (
+            <button type="button" key={item.title}>
+              <span>
+                <span className="review-highlights-support__desktop-title">
+                  {item.titleLines.map((line, index) => (
+                    <React.Fragment key={line}>
+                      {line}
+                      {index < item.titleLines.length - 1 ? <br aria-hidden="true" /> : null}
+                    </React.Fragment>
+                  ))}
+                </span>
+              </span>
+              <img className="review-highlights-support__arrow" src="/assets/images/review-highlights/support/arrow-right.svg" alt="" />
+              <img className="review-highlights-support__card-image" src={item.image} alt="" />
+            </button>
+          ))}
         </div>
-        <figure className="blank-support-docs__hub-image" data-node-id="10654:1187">
-          <img src="/assets/images/update-2-support-hub.png" alt="" />
-        </figure>
-      </article>
 
-      <div className="blank-support-docs__cards" data-node-id="10622:40698">
-        <article className="blank-support-docs__card" data-node-id="10801:34083">
-          <div className="blank-support-docs__card-copy" data-node-id="10801:34084">
-            <h3 data-node-id="10801:34085">
-              Instruction
-              <br />
-              Manual
-            </h3>
-            <img className="blank-support-docs__arrow" src="/assets/images/support-arrow-right.svg" alt="" aria-hidden="true" data-node-id="10801:34086" />
+        <article className="review-highlights-support__hub">
+          <img className="review-highlights-support__hub-image" src="/assets/images/review-highlights/support/product-hub.png" alt="" />
+          <div>
+            <span>
+              <strong>Product Hub</strong>
+              <p>Download setup, cleaning, and safety guidance.</p>
+            </span>
+            <img src="/assets/images/review-highlights/support/arrow-right.svg" alt="" />
           </div>
-          <figure className="blank-support-docs__card-image" data-node-id="10801:34089">
-            <img src="/assets/images/support-instruction-manual.png" alt="" />
-          </figure>
-        </article>
-        <article className="blank-support-docs__card" data-node-id="10801:34090">
-          <div className="blank-support-docs__card-copy" data-node-id="10801:34091">
-            <h3 data-node-id="10801:34092">
-              Return
-              <br />
-              Policies
-            </h3>
-            <img className="blank-support-docs__arrow" src="/assets/images/support-arrow-right.svg" alt="" aria-hidden="true" data-node-id="10801:34093" />
-          </div>
-          <figure className="blank-support-docs__card-image" data-node-id="10801:34096">
-            <img src="/assets/images/support-return-policies.png" alt="" />
-          </figure>
         </article>
       </div>
     </section>
@@ -2831,6 +3826,7 @@ function BlankDesktopSupportDocumentation() {
 function BlankDesktopFAQ() {
   return (
     <section
+      id="faqs"
       className="blank-faq"
       data-node-id="10622:40717"
       data-name="Tabs [Specs]"
@@ -3135,6 +4131,7 @@ function BlankSmoothScroll() {
 
 export default function BlankPage({
   hideDesktopContextualMenu = false,
+  showDesktopFeatureStory = false,
   showDesktopVarietalIntro = false,
   showDesktopKeepWarmIntro = false,
   showDesktopSoftOpeningIntro = false,
@@ -3148,7 +4145,15 @@ export default function BlankPage({
 } = {}) {
   const [activeImage, setActiveImage] = useState(0);
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
+  const [isBuyPillVisible, setIsBuyPillVisible] = useState(false);
+  const [isBuyPillExpanded, setIsBuyPillExpanded] = useState(false);
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [isExperimentPanelOpen, setIsExperimentPanelOpen] = useState(false);
+  const [featureDesignMode, setFeatureDesignMode] = useState('webp');
+  const [isContentWidthCapped, setIsContentWidthCapped] = useState(true);
   const currentImage = galleryImages[activeImage];
+  const shouldShowOriginalFeatureStory = featureDesignMode === 'original' || featureDesignMode === 'both';
+  const shouldShowWebpFeatureStory = featureDesignMode === 'webp' || featureDesignMode === 'both';
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -3160,11 +4165,32 @@ export default function BlankPage({
   }, []);
 
   useEffect(() => {
+    if (!isBuyPillExpanded) {
+      return undefined;
+    }
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousDocumentOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousDocumentOverflow;
+    };
+  }, [isBuyPillExpanded]);
+
+  useEffect(() => {
     let animationFrame = 0;
 
     const updateHeaderState = () => {
       animationFrame = 0;
       setIsHeaderHidden(window.scrollY > 24);
+
+      const hero = document.querySelector('.blank-hero.hero-only');
+      const heroBottom = hero?.getBoundingClientRect().bottom ?? window.innerHeight;
+      setIsBuyPillVisible(heroBottom <= 0);
     };
 
     const requestHeaderUpdate = () => {
@@ -3187,6 +4213,42 @@ export default function BlankPage({
     };
   }, []);
 
+  useEffect(() => {
+    const handleDebugPanelKeyDown = (event) => {
+      const target = event.target;
+      const isEditableTarget = target?.isContentEditable
+        || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target?.tagName);
+
+      if (isEditableTarget || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+        return;
+      }
+
+      if (event.key.toLowerCase() !== 'p') {
+        return;
+      }
+
+      event.preventDefault();
+      setIsExperimentPanelOpen((isOpen) => !isOpen);
+    };
+
+    window.addEventListener('keydown', handleDebugPanelKeyDown);
+
+    return () => window.removeEventListener('keydown', handleDebugPanelKeyDown);
+  }, []);
+
+  useEffect(() => {
+    let refreshFrame = window.requestAnimationFrame(() => {
+      ScrollTrigger.refresh();
+      refreshFrame = 0;
+    });
+
+    return () => {
+      if (refreshFrame) {
+        window.cancelAnimationFrame(refreshFrame);
+      }
+    };
+  }, [featureDesignMode, isContentWidthCapped]);
+
   const showPreviousImage = () => {
     setActiveImage((index) => (index === 0 ? galleryImages.length - 1 : index - 1));
   };
@@ -3197,10 +4259,27 @@ export default function BlankPage({
 
   return (
     <main
-      className={`blank-page${isHeaderHidden ? ' is-header-hidden' : ''}`}
+      className={`blank-page${isHeaderHidden ? ' is-header-hidden' : ''}${isContentWidthCapped ? ' is-debug-content-width-capped' : ''}`}
       aria-label="Blank component workspace"
     >
+      <BlankExperimentPanel
+        isOpen={isExperimentPanelOpen}
+        featureDesignMode={featureDesignMode}
+        isContentWidthCapped={isContentWidthCapped}
+        onFeatureDesignModeChange={setFeatureDesignMode}
+        onContentWidthCappedChange={setIsContentWidthCapped}
+        onClose={() => setIsExperimentPanelOpen(false)}
+      />
+
       <BlankHeroOnlySection />
+
+      <BlankProductStickyHeader onCompareOpen={() => setIsCompareOpen(true)} />
+      <div className={`blank-surface-buy-pill-backdrop${isBuyPillExpanded ? ' is-visible' : ''}`} aria-hidden="true" />
+      <BlankSurfaceBuyPill
+        isVisible={isBuyPillVisible}
+        onCompareOpen={() => setIsCompareOpen(true)}
+        onExpandedChange={setIsBuyPillExpanded}
+      />
 
       <BlankPrecisionSection />
 
@@ -3217,9 +4296,39 @@ export default function BlankPage({
         }}
       />
 
-      {showDesktopVarietalIntro ? <BlankDesktopVarietalIntro /> : null}
+      {showDesktopFeatureStory ? <div className="blank-desktop-feature-story-handoff" aria-hidden="true" /> : null}
 
-      {showDesktopKeepWarmIntro ? <BlankDesktopKeepWarmIntro /> : null}
+      {showDesktopFeatureStory ? (
+        <BlankDesktopFeatureStory
+          key="feature-story-original"
+          sectionId={shouldShowOriginalFeatureStory ? 'features' : null}
+          isEnabled={shouldShowOriginalFeatureStory}
+        />
+      ) : null}
+
+      {showDesktopFeatureStory ? (
+        <BlankDesktopFeatureStory
+          key="feature-story-webp"
+          items={desktopFeatureStoryWebpItems}
+          sectionId={shouldShowWebpFeatureStory && !shouldShowOriginalFeatureStory ? 'features' : null}
+          className="blank-desktop-feature-story--webp"
+          isEnabled={shouldShowWebpFeatureStory}
+          shouldTransitionPage={false}
+          shouldAnimateVarietalPosition={false}
+        />
+      ) : null}
+
+      {showDesktopFeatureStory ? (
+        <BlankMobileFeatureStory
+          items={shouldShowOriginalFeatureStory && !shouldShowWebpFeatureStory ? desktopFeatureStoryItems : desktopFeatureStoryWebpItems}
+          className="blank-mobile-feature-story--webp"
+          isEnabled={showDesktopFeatureStory}
+        />
+      ) : null}
+
+      {showDesktopVarietalIntro && !showDesktopFeatureStory ? <BlankDesktopVarietalIntro /> : null}
+
+      {showDesktopKeepWarmIntro && !showDesktopFeatureStory ? <BlankDesktopKeepWarmIntro /> : null}
 
       {showDesktopVarietalIntro ? (
         <BlankMobileSequenceFeature
@@ -3248,17 +4357,17 @@ export default function BlankPage({
         />
       ) : null}
 
+      {hideDesktopSoftLidSection ? <BlankSoftLidSection mobileOnly /> : null}
+
+      {showDesktopSoftOpeningIntro && !showDesktopFeatureStory ? <BlankDesktopSoftOpeningIntro /> : null}
+
+      {!hideDesktopSoftLidSection && !showDesktopFeatureStory ? <BlankSoftLidSection /> : null}
+
       <div className="blank-luxe-design-stack">
         <BlankGalleryHeaderSection />
 
         <MotionElevateStrip showHeading={false} />
       </div>
-
-      {hideDesktopSoftLidSection ? <BlankSoftLidSection mobileOnly /> : null}
-
-      {showDesktopSoftOpeningIntro ? <BlankDesktopSoftOpeningIntro /> : null}
-
-      {!hideDesktopSoftLidSection ? <BlankSoftLidSection /> : null}
 
       <MotionElevateStrip
         afterHeading={showDesktopColorSelector ? <BlankDesktopColorSelector /> : null}
@@ -3270,6 +4379,8 @@ export default function BlankPage({
       {showDesktopReviewHighlights ? <BlankMobileReviewHighlights /> : null}
       {showDesktopSupportDocumentation ? <BlankMobileSupportDocumentation /> : null}
       {showDesktopFAQ ? <BlankMobileFAQ /> : null}
+
+      {showDesktopTechSpecs ? <div className="blank-tech-specs-offset" aria-hidden="true" /> : null}
 
       {showDesktopTechSpecs ? <BlankDesktopTechSpecs /> : null}
 
@@ -3286,6 +4397,7 @@ export default function BlankPage({
       </section>
 
       {hideDesktopContextualMenu ? null : <ContextualMenu />}
+      {isCompareOpen ? <CompareTakeover onClose={() => setIsCompareOpen(false)} /> : null}
       <BlankSmoothScroll />
     </main>
   );

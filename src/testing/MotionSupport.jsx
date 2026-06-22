@@ -269,16 +269,16 @@ function TestingFooterIcon({ name }) {
   );
 }
 
-export function TestingFooter({ variant = 'default' }) {
+export function TestingFooter({ variant = 'default', linkHref = '/' }) {
   const className =
     variant === 'reversed' ? 'testing-footer testing-footer--reversed' : 'testing-footer testing-footer--default';
 
   return (
     <footer className={className} aria-label="Footer">
       <nav className="testing-footer__quick-links" aria-label="Footer quick links">
-        <a href="/">Shop</a>
-        <a href="/">Register a product</a>
-        <a href="/">Find a retailer</a>
+        <a href={linkHref}>Shop</a>
+        <a href={linkHref}>Register a product</a>
+        <a href={linkHref}>Find a retailer</a>
         <button className="testing-footer__country" type="button">
           <TestingFooterIcon name="globe" />
           United States
@@ -304,7 +304,7 @@ export function TestingFooter({ variant = 'default' }) {
 
           <div className="testing-footer__socials" aria-label="Social links">
             {['facebook', 'instagram', 'youtube', 'tiktok'].map((name) => (
-              <a href="/" key={name} aria-label={name}>
+              <a href={linkHref} key={name} aria-label={name}>
                 <TestingFooterIcon name={name} />
               </a>
             ))}
@@ -321,7 +321,7 @@ export function TestingFooter({ variant = 'default' }) {
                 <span className="testing-footer__column-mobile-title">Example text</span>
               </h2>
               {column.links.map((link) => (
-                <a href="/" key={link}>
+                <a href={linkHref} key={link}>
                   {link}
                 </a>
               ))}
