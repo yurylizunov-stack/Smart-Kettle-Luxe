@@ -7,11 +7,18 @@ import StickyNavBlankPage from './StickyNavBlankPage.jsx';
 import Update2Page from './Update2Page.jsx';
 import ReviewHighlightsPage from './ReviewHighlightsPage.jsx';
 
-const pathname = decodeURIComponent(window.location.pathname);
-const normalizedPath = pathname
-  .toLowerCase()
-  .replace(/\/+$/, '')
-  .replace(/[\s_]+/g, '-');
+const normalizeRoute = (value) => {
+  const route = value?.startsWith('/') ? value : `/${value || ''}`;
+
+  return route
+    .toLowerCase()
+    .replace(/\/+$/, '')
+    .replace(/[\s_]+/g, '-') || '/';
+};
+
+const searchParams = new URLSearchParams(window.location.search);
+const queryRoute = searchParams.get('page') || searchParams.get('view');
+const normalizedPath = normalizeRoute(queryRoute || decodeURIComponent(window.location.pathname));
 
 const Page = ['/update-2', '/update2'].includes(normalizedPath)
   ? Update2Page
