@@ -576,7 +576,7 @@ function BlankSurfaceBuyPill({ isVisible = false, onCompareOpen, onExpandedChang
         >
           <span>Explore</span>
         </button>
-        <a className="blank-surface-buy-pill__button" href="/product-detail">
+        <a className="blank-surface-buy-pill__button" href="?page=buy">
           <span>Buy</span>
         </a>
       </div>
@@ -649,7 +649,7 @@ function BlankSurfaceBuyPill({ isVisible = false, onCompareOpen, onExpandedChang
               </span>
             </div>
 
-            <a className="blank-surface-buy-pill__expanded-buy" href="/product-detail">
+            <a className="blank-surface-buy-pill__expanded-buy" href="?page=buy">
               <span>Buy</span>
             </a>
           </div>
