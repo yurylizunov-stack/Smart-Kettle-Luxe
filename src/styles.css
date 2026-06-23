@@ -3393,15 +3393,18 @@ main {
     height: 100vh;
     height: 100svh;
     overflow: hidden;
-    background: #ffffff;
+    background: #efefef;
   }
 
   .blank-luxe-design-stack .blank-gallery-header {
     position: absolute;
     top: 40px;
     left: 0;
+    z-index: 2;
     width: 100%;
+    min-height: 0;
     padding: 0 80px 0 20px;
+    background: #efefef;
     transform: translate3d(0, var(--blank-luxe-copy-entry-y, 0px), 0);
     will-change: transform;
   }
@@ -3440,6 +3443,12 @@ main {
 
   .blank-gallery-header__line-inner {
     display: inline-block;
+  }
+
+  .blank-luxe-design-stack .blank-gallery-header__line-inner {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 
   .blank-luxe-design-stack .motion-elevate-strip--rail-only {
