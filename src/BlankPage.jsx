@@ -4330,7 +4330,7 @@ export default function BlankPage({
 
       {showDesktopKeepWarmIntro && !showDesktopFeatureStory ? <BlankDesktopKeepWarmIntro /> : null}
 
-      {showDesktopVarietalIntro ? (
+      {showDesktopVarietalIntro && !showDesktopFeatureStory ? (
         <BlankMobileSequenceFeature
           title="5 Varietal Settings"
           copy="Pre-programmed and customizable One-touch functionalities create ideal brewing conditions for Black, Green, White or Oolong teas and French Press Coffee."
@@ -4343,7 +4343,7 @@ export default function BlankPage({
         />
       ) : null}
 
-      {showDesktopKeepWarmIntro ? (
+      {showDesktopKeepWarmIntro && !showDesktopFeatureStory ? (
         <BlankMobileSequenceFeature
           title="Keep Warm Button"
           copy="One-touch functionality keeps your water warm for 20 minutes and can be activated before during or on completion of the water heating cycle."
@@ -4357,7 +4357,7 @@ export default function BlankPage({
         />
       ) : null}
 
-      {hideDesktopSoftLidSection ? <BlankSoftLidSection mobileOnly /> : null}
+      {hideDesktopSoftLidSection && !showDesktopFeatureStory ? <BlankSoftLidSection mobileOnly /> : null}
 
       {showDesktopSoftOpeningIntro && !showDesktopFeatureStory ? <BlankDesktopSoftOpeningIntro /> : null}
 
