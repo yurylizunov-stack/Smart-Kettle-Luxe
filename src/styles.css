@@ -3399,14 +3399,15 @@ main {
   .blank-luxe-design-stack .blank-gallery-header {
     position: absolute;
     top: 40px;
-    left: 0;
+    right: 20px;
+    left: 20px;
     z-index: 2;
-    width: 100%;
+    width: auto;
     min-height: 0;
-    padding: 0 80px 0 20px;
+    padding: 0;
     background: #efefef;
-    transform: translate3d(0, var(--blank-luxe-copy-entry-y, 0px), 0);
-    will-change: transform;
+    transform: none;
+    will-change: auto;
   }
 
   .blank-gallery-header {
@@ -3418,6 +3419,8 @@ main {
     display: flex;
     flex-direction: column;
     gap: 19px;
+    width: 100%;
+    max-width: none;
     font-size: 16px;
     line-height: 1.4;
     text-align: left;

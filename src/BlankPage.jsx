@@ -1392,17 +1392,7 @@ function BlankGalleryHeaderSection() {
 
       section.classList.toggle('is-visible', shouldReveal);
 
-      if (isMobileLayout) {
-        const stack = section.closest('.blank-luxe-design-stack');
-        const stackRect = stack?.getBoundingClientRect();
-        const progress = stackRect
-          ? gsap.utils.clamp(0, 1, 1 - (stackRect.top / window.innerHeight))
-          : 1;
-        const entryOffset = Math.min(180, window.innerHeight * 0.18);
-        const y = gsap.utils.interpolate(entryOffset, 0, progress);
-
-        section.style.setProperty('--blank-luxe-copy-entry-y', `${Math.round(y)}px`);
-      } else {
+      if (!isMobileLayout) {
         section.style.removeProperty('--blank-luxe-copy-entry-y');
       }
     };
