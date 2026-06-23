@@ -19296,6 +19296,67 @@ html:has(.hero-only-page)::-webkit-scrollbar {
     padding: 0 20px;
     font-size: 14px;
   }
+
+  .blank-page .blank-hero.hero-only {
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+
+  .blank-page .blank-hero .hero-only__stage {
+    height: 100vh;
+    height: 100svh;
+    place-items: stretch;
+  }
+
+  .blank-page .hero-only__copy {
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 33px;
+    width: 100%;
+    max-width: none;
+    padding: 80px 20px;
+    color: #ffffff;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .blank-page .hero-only__headline {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .blank-page .hero-only__eyebrow {
+    width: 100%;
+    font-family: 'Archer', Georgia, serif;
+    font-size: 22px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .blank-page .hero-only__title {
+    width: 100%;
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .blank-page .hero-only__scroll {
+    width: 100%;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    line-height: 1.2;
+    text-transform: none;
+  }
 }
 
 @media (min-width: 1921px) {
