@@ -1342,6 +1342,11 @@ main {
     display: none;
   }
 
+  .blank-surface-buy-pill,
+  .blank-surface-buy-pill-backdrop {
+    display: none;
+  }
+
   .blank-surface-buy-pill {
     top: auto;
     bottom: max(12px, env(safe-area-inset-bottom));
