@@ -37,6 +37,81 @@ const warmImage = (src, fetchPriority = 'low') => {
   return image;
 };
 
+const sequenceImageCache = new Map();
+
+const getSequenceImage = (src, fetchPriority = 'high') => {
+  const cachedImage = sequenceImageCache.get(src);
+
+  if (cachedImage) {
+    return cachedImage;
+  }
+
+  const image = warmImage(src, fetchPriority);
+  const cacheEntry = {
+    callbacks: [],
+    image,
+    isLoaded: image.complete && image.naturalWidth > 0,
+  };
+
+  const handleLoad = () => {
+    cacheEntry.isLoaded = true;
+    const callbacks = cacheEntry.callbacks.splice(0);
+    callbacks.forEach((callback) => callback());
+  };
+
+  const handleError = () => {
+    cacheEntry.callbacks.splice(0);
+  };
+
+  if (cacheEntry.isLoaded) {
+    window.setTimeout(handleLoad, 0);
+  } else {
+    image.addEventListener('load', handleLoad, { once: true });
+    image.addEventListener('error', handleError, { once: true });
+  }
+
+  sequenceImageCache.set(src, cacheEntry);
+
+  return cacheEntry;
+};
+
+const setSequenceImageFrame = (image, source, frameIndex) => {
+  if (!image || !source) {
+    return;
+  }
+
+  const frame = String(frameIndex);
+
+  if (image.getAttribute('src') === source) {
+    image.dataset.frame = frame;
+    image.dataset.pendingSrc = '';
+    return;
+  }
+
+  const cacheEntry = getSequenceImage(source, 'high');
+
+  image.dataset.pendingFrame = frame;
+  image.dataset.pendingSrc = source;
+
+  const applyFrame = () => {
+    if (image.dataset.pendingSrc !== source) {
+      return;
+    }
+
+    image.dataset.retryCount = '0';
+    image.src = source;
+    image.dataset.frame = frame;
+    image.dataset.pendingSrc = '';
+  };
+
+  if (cacheEntry.isLoaded) {
+    applyFrame();
+    return;
+  }
+
+  cacheEntry.callbacks.push(applyFrame);
+};
+
 const warmSequenceFrames = (framePath, startFrame = 0, endFrame = 0, maxFrames = 72) => {
   const frameCount = Math.max(0, endFrame - startFrame + 1);
 
@@ -1230,13 +1305,9 @@ function BlankSoftOpeningDesktopSection() {
         lastReadySource = source;
       }
 
-      if (image.getAttribute('src') !== lastReadySource) {
-        image.dataset.pendingFrame = String(frameIndex);
-        image.src = lastReadySource;
-      }
+      setSequenceImageFrame(image, lastReadySource, frameIndex);
 
       currentFrame = frameIndex;
-      image.dataset.frame = String(frameIndex);
     };
 
     const updateCopy = (frame) => {
@@ -1428,11 +1499,7 @@ function BlankVarietalSettingsSection() {
       const frameIndex = gsap.utils.clamp(0, varietalEndFrame, Math.round(frame));
       const source = varietalFramePath(frameIndex);
 
-      if (image.getAttribute('src') !== source) {
-        image.src = source;
-      }
-
-      image.dataset.frame = String(frameIndex);
+      setSequenceImageFrame(image, source, frameIndex);
     };
 
     const firstFrame = images[0];
@@ -1688,13 +1755,7 @@ function BlankDesktopFeatureStory({
       );
       const source = item.framePath(frameIndex);
 
-      if (image.getAttribute('src') !== source) {
-        image.dataset.retryCount = '0';
-        image.fetchPriority = 'high';
-        image.src = source;
-      }
-
-      image.dataset.frame = String(frameIndex);
+      setSequenceImageFrame(image, source, frameIndex);
     };
 
     const setStoryProgress = (progress) => {
@@ -1933,13 +1994,9 @@ function BlankDesktopKeepWarmIntro() {
       const frameIndex = gsap.utils.clamp(0, desktopKeepWarmEndFrame, Math.round(frame));
       const source = desktopKeepWarmFramePath(frameIndex);
 
-      if (image.getAttribute('src') !== source) {
-        image.dataset.pendingFrame = String(frameIndex);
-        image.src = source;
-      }
+      setSequenceImageFrame(image, source, frameIndex);
 
       currentFrame = frameIndex;
-      image.dataset.frame = String(frameIndex);
     };
 
     const firstFrame = images[currentFrame];
@@ -2082,13 +2139,9 @@ function BlankDesktopSoftOpeningIntro() {
       const frameIndex = gsap.utils.clamp(0, desktopSoftOpeningEndFrame, Math.round(frame));
       const source = desktopSoftOpeningFramePath(frameIndex);
 
-      if (image.getAttribute('src') !== source) {
-        image.dataset.pendingFrame = String(frameIndex);
-        image.src = source;
-      }
+      setSequenceImageFrame(image, source, frameIndex);
 
       currentFrame = frameIndex;
-      image.dataset.frame = String(frameIndex);
     };
 
     const updateCopy = (frame) => {
@@ -2244,13 +2297,9 @@ function BlankDesktopVarietalIntro() {
       const frameIndex = gsap.utils.clamp(0, desktopVarietalEndFrame, Math.round(frame));
       const source = desktopVarietalFramePath(frameIndex);
 
-      if (image.getAttribute('src') !== source) {
-        image.dataset.pendingFrame = String(frameIndex);
-        image.src = source;
-      }
+      setSequenceImageFrame(image, source, frameIndex);
 
       currentFrame = frameIndex;
-      image.dataset.frame = String(frameIndex);
     };
 
     const firstFrame = images[currentFrame];
@@ -2407,13 +2456,7 @@ function BlankMobileFeatureStory({
       );
       const source = item.framePath(frameIndex);
 
-      if (image.getAttribute('src') !== source) {
-        image.dataset.retryCount = '0';
-        image.fetchPriority = 'high';
-        image.src = source;
-      }
-
-      image.dataset.frame = String(frameIndex);
+      setSequenceImageFrame(image, source, frameIndex);
     };
 
     const setStoryProgress = (progress) => {
@@ -2591,15 +2634,9 @@ function BlankMobileSequenceFeature({
       const frameIndex = gsap.utils.clamp(0, endFrame, Math.round(frame));
       const source = framePath(frameIndex);
 
-      if (image.getAttribute('src') !== source) {
-        image.dataset.pendingFrame = String(frameIndex);
-        image.dataset.retryCount = '0';
-        image.fetchPriority = 'high';
-        image.src = source;
-      }
+      setSequenceImageFrame(image, source, frameIndex);
 
       currentFrame = frameIndex;
-      image.dataset.frame = String(frameIndex);
     };
 
     const firstFrame = warmImage(framePath(currentFrame), 'high');
@@ -2849,11 +2886,7 @@ function BlankSoftLidSection({
       const frameIndex = gsap.utils.clamp(0, softLidEndFrame, Math.round(frame));
       const source = softLidFramePath(Math.max(1, frameIndex));
 
-      if (image.getAttribute('src') !== source) {
-        image.src = source;
-      }
-
-      image.dataset.frame = String(frameIndex);
+      setSequenceImageFrame(image, source, frameIndex);
     };
 
     const updateMobileBpaCopyTop = () => {
@@ -3382,15 +3415,9 @@ function BlankDesktopTechSpecs() {
       const frameIndex = gsap.utils.clamp(0, desktopTechSpecsEndFrame, Math.round(frame));
       const source = desktopTechSpecsFramePath(frameIndex);
 
-      if (image.getAttribute('src') !== source) {
-        image.dataset.pendingFrame = String(frameIndex);
-        image.dataset.retryCount = '0';
-        image.fetchPriority = 'high';
-        image.src = source;
-      }
+      setSequenceImageFrame(image, source, frameIndex);
 
       currentFrame = frameIndex;
-      image.dataset.frame = String(frameIndex);
     };
 
     const firstFrame = warmImage(desktopTechSpecsFramePath(currentFrame), 'high');
@@ -3606,13 +3633,7 @@ function BlankMobileTechSpecs() {
       const frameIndex = gsap.utils.wrap(0, mobileTechSpecsEndFrame + 1, Math.round(nextFrame));
       const source = mobileTechSpecsFramePath(frameIndex);
 
-      if (image.getAttribute('src') !== source) {
-        image.dataset.retryCount = '0';
-        image.fetchPriority = 'high';
-        image.src = source;
-      }
-
-      image.dataset.frame = String(frameIndex);
+      setSequenceImageFrame(image, source, frameIndex);
     };
 
     drawFrame(0);
