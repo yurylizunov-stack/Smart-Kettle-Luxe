@@ -1,5 +1,6 @@
-﻿import React from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { Analytics } from '@vercel/analytics/react';
 import './styles.css';
 import BlankPage from './BlankPage.jsx';
 import HeroOnlyPage from './HeroOnlyPage.jsx';
@@ -35,5 +36,6 @@ const Page = ['/update-2', '/update2'].includes(normalizedPath)
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Page />
+    <Analytics />
   </React.StrictMode>,
 );
