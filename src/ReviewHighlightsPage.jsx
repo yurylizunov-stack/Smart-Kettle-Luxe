@@ -117,6 +117,21 @@ const specsColumns = [
 ];
 
 const specs = specsColumns.flat();
+const getSpecByLabel = (label) => specs.find((item) => item.label === label);
+const rightRailSpecsColumns = [
+  [
+    getSpecByLabel('Dimensions (WxDxH)'),
+    getSpecByLabel('Construction Materials'),
+    { label: 'Capacity', value: ['57 oz. / 1.7 liter / 7 Cup'] },
+    getSpecByLabel('Settings'),
+  ],
+  [
+    getSpecByLabel('Voltage'),
+    getSpecByLabel('Warranty'),
+    getSpecByLabel('Weight'),
+    getSpecByLabel('Power'),
+  ],
+].map((column) => column.filter(Boolean));
 
 const included = [
   { title: 'Kettle Base', image: `${ASSET_ROOT}/included/kettle-body.png` },
@@ -365,30 +380,166 @@ function ProductRail({ title, items, actionLabel, onAction }) {
   );
 }
 
-function AccordionSection({ title, children, defaultOpen = false, className = '', mobileTitle }) {
+function AccordionSection({ title, children, defaultOpen = false, className = '', mobileTitle, forceOpen = false, hideIcon = false }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const reactId = useId();
   const contentId = useMemo(() => `review-${reactId.replace(/:/g, '')}-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`, [reactId, title]);
+  const isExpanded = forceOpen || isOpen;
 
   return (
-    <section className={`review-highlights-accordion${className ? ` ${className}` : ''}${isOpen ? ' is-open' : ''}`}>
+    <section className={`review-highlights-accordion${className ? ` ${className}` : ''}${isExpanded ? ' is-open' : ''}${forceOpen ? ' is-forced-open' : ''}`}>
       <button
         className="review-highlights-accordion__header"
         type="button"
-        aria-expanded={isOpen}
+        aria-expanded={isExpanded}
         aria-controls={contentId}
-        onClick={() => setIsOpen((value) => !value)}
+        onClick={() => {
+          if (!forceOpen) {
+            setIsOpen((value) => !value);
+          }
+        }}
       >
         <span>
           <span className="review-highlights-accordion__title-desktop">{title}</span>
           {mobileTitle ? <span className="review-highlights-accordion__title-mobile">{mobileTitle}</span> : null}
         </span>
-        <span className="review-highlights-accordion__icon" aria-hidden="true" />
+        {!hideIcon ? <span className="review-highlights-accordion__icon" aria-hidden="true" /> : null}
       </button>
       <div className="review-highlights-accordion__content" id={contentId}>
         {children}
       </div>
     </section>
+  );
+}
+
+function RightRailAccordion({ title, children, defaultOpen = false }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const reactId = useId();
+  const contentId = useMemo(() => `right-rail-${reactId.replace(/:/g, '')}-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`, [reactId, title]);
+
+  return (
+    <section className={`review-highlights-right-rail__section${isOpen ? ' is-open' : ''}`}>
+      <button
+        className="review-highlights-right-rail__header"
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls={contentId}
+        onClick={() => setIsOpen((value) => !value)}
+      >
+        <span>{title}</span>
+        <i aria-hidden="true" />
+      </button>
+      <div className="review-highlights-right-rail__content" id={contentId}>
+        {children}
+      </div>
+      <div className="review-highlights-right-rail__divider" aria-hidden="true" />
+    </section>
+  );
+}
+
+function RightRailBuyboxDetails({ resetSiblingSectionVideos }) {
+  const rightRailIncluded = [
+    { ...included[0], title: 'Kettle Body' },
+    included[1],
+    included[2],
+  ];
+  const supportLinks = ['Product Hub', 'Instruction Manual', 'Return Policies'];
+
+  return (
+    <div className="review-highlights-right-rail" aria-label="Product details">
+      <RightRailAccordion title="Product Description">
+        <p className="review-highlights-right-rail__description">{ABOUT_COPY}</p>
+      </RightRailAccordion>
+
+      <RightRailAccordion title="Technical Specifications">
+        <div className="review-highlights-right-rail__specs">
+          {rightRailSpecsColumns.map((column, columnIndex) => (
+            <div className="review-highlights-right-rail__spec-column" key={`right-rail-spec-column-${columnIndex}`}>
+              {column.map((item) => (
+                <article className="review-highlights-right-rail__spec" key={`right-rail-${item.label}`}>
+                  <strong>{item.label}</strong>
+                  <p>
+                    {item.value.map((line) => (
+                      <span key={line}>{line}</span>
+                    ))}
+                  </p>
+                </article>
+              ))}
+            </div>
+          ))}
+        </div>
+      </RightRailAccordion>
+
+      <RightRailAccordion title="What's Included">
+        <div className="review-highlights-right-rail__included">
+          {rightRailIncluded.map((item) => (
+            <article className="review-highlights-right-rail__included-row" key={`right-rail-included-${item.title}-${item.image}`}>
+              <figure>
+                <img className={item.blend ? 'is-multiply' : ''} src={item.image} alt="" />
+              </figure>
+              <p>{item.title}</p>
+            </article>
+          ))}
+        </div>
+      </RightRailAccordion>
+
+      <RightRailAccordion title="Videos">
+        <div className="review-highlights-right-rail__videos">
+          {videos.map((video) => (
+            <button
+              type="button"
+              key={`right-rail-${video.title}`}
+              aria-label={`Play ${video.title}`}
+              onClick={(event) => {
+                const media = event.currentTarget.querySelector('video');
+                if (!media) return;
+                if (media.paused) {
+                  resetSiblingSectionVideos(media);
+                  media.play().catch(() => {});
+                } else {
+                  media.pause();
+                }
+              }}
+            >
+              <video
+                muted
+                playsInline
+                preload="metadata"
+                aria-hidden="true"
+                onPlay={(event) => resetSiblingSectionVideos(event.currentTarget)}
+              >
+                <source src={video.source} type="video/mp4" />
+              </video>
+            </button>
+          ))}
+        </div>
+      </RightRailAccordion>
+
+      <RightRailAccordion title="Support & Documentation">
+        <div className="review-highlights-right-rail__support">
+          {supportLinks.map((label) => (
+            <button type="button" key={`right-rail-support-${label}`}>
+              <span>{label}</span>
+              <i aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      </RightRailAccordion>
+
+      <section className="review-highlights-right-rail__collection">
+        <h2>Shop the Collection</h2>
+        <div className="review-highlights-right-rail__collection-content">
+          <figure>
+            <img src="/assets/images/review-highlights/collection/kettle-toaster-collection.png" alt="" />
+          </figure>
+          <div className="review-highlights-right-rail__collection-row">
+            <strong>$439.90</strong>
+            <button type="button">Add to Cart</button>
+          </div>
+        </div>
+        <div className="review-highlights-right-rail__divider" aria-hidden="true" />
+      </section>
+    </div>
   );
 }
 
@@ -677,7 +828,7 @@ export default function ReviewHighlightsPage() {
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 760px)').matches : false
   ));
   const [layoutOptions, setLayoutOptions] = useState({
-    debugView: 'fullscreen',
+    debugView: 'right-rail',
     aboutCopyInBuybox: true,
     highlightsCarousel: false,
     productRailTenColumn: true,
@@ -689,6 +840,7 @@ export default function ReviewHighlightsPage() {
     btfTenColumn: false,
     accordionOnly: true,
     fullScreenBiggerText: true,
+    rightRailExposeDetails: true,
     columnGuides: false,
   });
   const [featureFrame, setFeatureFrame] = useState(0);
@@ -1187,19 +1339,22 @@ export default function ReviewHighlightsPage() {
 
   const effectiveDebugView = isMobileViewport ? 'capped' : layoutOptions.debugView;
   const isFullScreenDebugView = effectiveDebugView === 'fullscreen';
-  const isAboutCopyInBuyboxActive = !isMobileViewport && (isFullScreenDebugView || layoutOptions.aboutCopyInBuybox);
-  const isHeroSplitFullBleedActive = !isMobileViewport && (isFullScreenDebugView || layoutOptions.heroSplitFullBleed);
-  const isHeroFullBleedActive = !isMobileViewport && (isFullScreenDebugView || layoutOptions.heroFullBleed || layoutOptions.heroSplitFullBleed);
-  const isHeroFullBleedAboutActive = !isMobileViewport && !isFullScreenDebugView && layoutOptions.heroFullBleedAbout;
-  const isHeroFullBleedCollectionActive = !isMobileViewport && !isFullScreenDebugView && layoutOptions.heroFullBleedCollection;
-  const isHeroThumbsLeftAlignedActive = !isMobileViewport && !isFullScreenDebugView && layoutOptions.heroThumbsLeftAligned;
-  const isHighlightsCarouselActive = (!isMobileViewport && !isFullScreenDebugView && layoutOptions.highlightsCarousel)
-    || (isMobileViewport && !isFullScreenDebugView);
-  const isProductRailTenColumnActive = !isMobileViewport && !isFullScreenDebugView && layoutOptions.productRailTenColumn;
+  const isRightRailDebugView = effectiveDebugView === 'right-rail';
+  const isFullScreenLayoutView = isFullScreenDebugView || isRightRailDebugView;
+  const isAboutCopyInBuyboxActive = !isMobileViewport && (isFullScreenLayoutView || layoutOptions.aboutCopyInBuybox);
+  const isHeroSplitFullBleedActive = !isMobileViewport && (isFullScreenLayoutView || layoutOptions.heroSplitFullBleed);
+  const isHeroFullBleedActive = !isMobileViewport && (isFullScreenLayoutView || layoutOptions.heroFullBleed || layoutOptions.heroSplitFullBleed);
+  const isHeroFullBleedAboutActive = !isMobileViewport && !isFullScreenLayoutView && layoutOptions.heroFullBleedAbout;
+  const isHeroFullBleedCollectionActive = !isMobileViewport && !isFullScreenLayoutView && layoutOptions.heroFullBleedCollection;
+  const isHeroThumbsLeftAlignedActive = !isMobileViewport && !isFullScreenLayoutView && layoutOptions.heroThumbsLeftAligned;
+  const isHighlightsCarouselActive = (!isMobileViewport && !isFullScreenLayoutView && layoutOptions.highlightsCarousel)
+    || (isMobileViewport && !isFullScreenLayoutView);
+  const isProductRailTenColumnActive = !isMobileViewport && !isFullScreenLayoutView && layoutOptions.productRailTenColumn;
   const isBtfTenColumnActive = !isMobileViewport && isFullScreenDebugView && layoutOptions.btfTenColumn;
   const isAccordionOnlyActive = !isMobileViewport && isFullScreenDebugView && layoutOptions.accordionOnly;
   const isFullScreenBiggerTextActive = !isMobileViewport && isFullScreenDebugView && layoutOptions.fullScreenBiggerText;
-  const shouldRenderBelowHero = !isFullScreenDebugView;
+  const isRightRailExposedDetailsActive = !isMobileViewport && isRightRailDebugView && layoutOptions.rightRailExposeDetails;
+  const shouldRenderBelowHero = !isFullScreenLayoutView;
 
   useEffect(() => {
     const pageNode = pageRef.current;
@@ -1243,11 +1398,52 @@ export default function ReviewHighlightsPage() {
     };
   }, [isHeroSplitFullBleedActive]);
 
+  useEffect(() => {
+    const pageNode = pageRef.current;
+
+    if (!pageNode) {
+      return undefined;
+    }
+
+    let frameId;
+
+    const updateRightRailSlowScroll = () => {
+      if (!isRightRailDebugView || !window.matchMedia('(min-width: 761px)').matches) {
+        pageNode.style.removeProperty('--rh-right-rail-slow-y');
+        return;
+      }
+
+      const slowOffset = Math.min(Math.max(window.scrollY * 0.24, 0), 180);
+      pageNode.style.setProperty('--rh-right-rail-slow-y', `${slowOffset}px`);
+    };
+
+    const scheduleUpdate = () => {
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+
+      frameId = requestAnimationFrame(updateRightRailSlowScroll);
+    };
+
+    updateRightRailSlowScroll();
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+
+    return () => {
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+      pageNode.style.removeProperty('--rh-right-rail-slow-y');
+    };
+  }, [isRightRailDebugView]);
+
   return (
     <>
     <main
       ref={pageRef}
-      className={`review-highlights-page${!isFullScreenDebugView ? ' is-debug-capped' : ''}${isAboutCopyInBuyboxActive ? ' is-about-copy-in-buybox' : ''}${isHighlightsCarouselActive ? ' is-highlights-carousel' : ''}${isProductRailTenColumnActive ? ' is-product-rail-ten-column' : ''}${isBtfTenColumnActive ? ' is-btf-10-column' : ''}${isAccordionOnlyActive ? ' is-accordion-only' : ''}${isFullScreenBiggerTextActive ? ' is-fullscreen-bigger-text' : ''}${isHeroFullBleedActive ? ' is-hero-full-bleed' : ''}${isHeroFullBleedAboutActive ? ' is-hero-full-bleed-about' : ''}${isHeroFullBleedCollectionActive ? ' is-hero-full-bleed-collection' : ''}${isHeroThumbsLeftAlignedActive ? ' is-hero-thumbs-left-aligned' : ''}${isHeroSplitFullBleedActive ? ' is-hero-split-full-bleed' : ''}${!isMobileViewport && layoutOptions.columnGuides ? ' is-column-guides-visible' : ''}`}
+      className={`review-highlights-page${!isFullScreenLayoutView ? ' is-debug-capped' : ''}${isRightRailDebugView ? ' is-right-rail' : ''}${isRightRailExposedDetailsActive ? ' is-right-rail-exposed-details' : ''}${isAboutCopyInBuyboxActive ? ' is-about-copy-in-buybox' : ''}${isHighlightsCarouselActive ? ' is-highlights-carousel' : ''}${isProductRailTenColumnActive ? ' is-product-rail-ten-column' : ''}${isBtfTenColumnActive ? ' is-btf-10-column' : ''}${isAccordionOnlyActive ? ' is-accordion-only' : ''}${isFullScreenBiggerTextActive ? ' is-fullscreen-bigger-text' : ''}${isHeroFullBleedActive ? ' is-hero-full-bleed' : ''}${isHeroFullBleedAboutActive ? ' is-hero-full-bleed-about' : ''}${isHeroFullBleedCollectionActive ? ' is-hero-full-bleed-collection' : ''}${isHeroThumbsLeftAlignedActive ? ' is-hero-thumbs-left-aligned' : ''}${isHeroSplitFullBleedActive ? ' is-hero-split-full-bleed' : ''}${!isMobileViewport && layoutOptions.columnGuides ? ' is-column-guides-visible' : ''}`}
       aria-label="Review Highlights product page"
     >
       <ReviewHeader />
@@ -1267,6 +1463,7 @@ export default function ReviewHighlightsPage() {
             onChange={(event) => setLayoutOptions((currentOptions) => ({ ...currentOptions, debugView: event.target.value }))}
           >
             <option value="fullscreen">Full screen</option>
+            <option value="right-rail">Right rail</option>
             <option value="capped">Capped</option>
           </select>
         </label>
@@ -1297,6 +1494,16 @@ export default function ReviewHighlightsPage() {
               <span>Bigger text</span>
             </label>
           </>
+        ) : null}
+        {!isMobileViewport && layoutOptions.debugView === 'right-rail' ? (
+          <label>
+            <input
+              type="checkbox"
+              checked={layoutOptions.rightRailExposeDetails}
+              onChange={() => toggleLayoutOption('rightRailExposeDetails')}
+            />
+            <span>Expose FAQ/reviews</span>
+          </label>
         ) : null}
         {!isMobileViewport && layoutOptions.debugView === 'capped' ? (
           <>
@@ -1493,7 +1700,9 @@ export default function ReviewHighlightsPage() {
             </span>
           </div>
           <p className="review-highlights-buybox__price">$219.95</p>
-          <p className="review-highlights-buybox__about-copy review-highlights-buybox__about-copy--desktop">{ABOUT_COPY}</p>
+          {!isRightRailDebugView ? (
+            <p className="review-highlights-buybox__about-copy review-highlights-buybox__about-copy--desktop">{ABOUT_COPY}</p>
+          ) : null}
           <fieldset className="review-highlights-colors">
             <legend>Color</legend>
             <div className="review-highlights-colors__grid">
@@ -1535,7 +1744,9 @@ export default function ReviewHighlightsPage() {
           </div>
           <p className="review-highlights-buybox__about-copy review-highlights-buybox__about-copy--mobile">{ABOUT_COPY}</p>
 
-          {isFullScreenDebugView && !isAccordionOnlyActive ? (
+          {isRightRailDebugView ? (
+            <RightRailBuyboxDetails resetSiblingSectionVideos={resetSiblingSectionVideos} />
+          ) : isFullScreenLayoutView && !isAccordionOnlyActive ? (
           <div className="review-highlights-buybox__accordions">
             <AccordionSection title="Technical Specifications" className="review-highlights-accordion--tech-specs">
               <div className="review-highlights-spec-list">
@@ -1615,12 +1826,12 @@ export default function ReviewHighlightsPage() {
         </aside>
       </div>
 
-      {isFullScreenDebugView ? (
+      {isFullScreenLayoutView ? (
         <section className="review-highlights-fullscreen-dark" aria-label="Product story">
           <section className={`review-highlights-feature review-highlights-feature--fullscreen review-highlights-feature--dark-panel${isFeatureIntroVisible ? ' is-feature-intro-visible' : ''}${isFeatureVisible ? ' is-feature-playable' : ''}`} aria-label="Get the Highlights" ref={featureSectionRef}>
             <div className="review-highlights-feature__gallery">
               <div className="review-highlights-feature__gallery-copy">
-                <h2>Highlights</h2>
+                <h2>Feature Highlights</h2>
                 <div>
                   <strong>{activeHighlight.title}</strong>
                   <p>{activeHighlight.copy}</p>
@@ -1676,9 +1887,14 @@ export default function ReviewHighlightsPage() {
         </section>
       ) : null}
 
-      {isFullScreenDebugView && !isAccordionOnlyActive ? (
+      {isFullScreenLayoutView && !isAccordionOnlyActive ? (
         <section className="review-highlights-fullscreen-details" aria-label="Product support details">
-          <AccordionSection title="FAQS" className="review-highlights-accordion--faq">
+          <AccordionSection
+            title="FAQS"
+            className="review-highlights-accordion--faq"
+            forceOpen={isRightRailExposedDetailsActive}
+            hideIcon={isRightRailExposedDetailsActive}
+          >
             <div className="review-highlights-faq">
               {faqs.map(([question, answer]) => (
                 <article key={`fullscreen-${question}`}>
@@ -1689,7 +1905,13 @@ export default function ReviewHighlightsPage() {
             </div>
           </AccordionSection>
 
-          <AccordionSection title="Customer Reviews" mobileTitle="Review Highlights" className="review-highlights-accordion--reviews">
+          <AccordionSection
+            title="Customer Reviews"
+            mobileTitle="Review Highlights"
+            className="review-highlights-accordion--reviews"
+            forceOpen={isRightRailExposedDetailsActive}
+            hideIcon={isRightRailExposedDetailsActive}
+          >
             <div className="review-highlights-reviews">
               <div className="review-highlights-reviews__summary">
                 <strong>4.5</strong>
@@ -1743,7 +1965,7 @@ export default function ReviewHighlightsPage() {
         </section>
       ) : null}
 
-      {isFullScreenDebugView ? (
+      {isFullScreenLayoutView ? (
         <div className="review-highlights-fullscreen-rail">
           <ProductRail title="Parts and Accessories" items={accessories} />
           <ProductRail
