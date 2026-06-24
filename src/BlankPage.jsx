@@ -1392,17 +1392,7 @@ function BlankGalleryHeaderSection() {
 
       section.classList.toggle('is-visible', shouldReveal);
 
-      if (isMobileLayout) {
-        const stack = section.closest('.blank-luxe-design-stack');
-        const stackRect = stack?.getBoundingClientRect();
-        const progress = stackRect
-          ? gsap.utils.clamp(0, 1, 1 - (stackRect.top / window.innerHeight))
-          : 1;
-        const entryOffset = Math.min(180, window.innerHeight * 0.18);
-        const y = gsap.utils.interpolate(entryOffset, 0, progress);
-
-        section.style.setProperty('--blank-luxe-copy-entry-y', `${Math.round(y)}px`);
-      } else {
+      if (!isMobileLayout) {
         section.style.removeProperty('--blank-luxe-copy-entry-y');
       }
     };
@@ -3180,94 +3170,25 @@ function BlankDesktopReviewHighlights() {
 }
 
 function BlankDesktopWhatsIncluded() {
-  const sectionRef = useRef(null);
-  const [activeIncludedIndex, setActiveIncludedIndex] = useState(0);
-  const activeIncludedItem = includedHighlightCards[activeIncludedIndex] || includedHighlightCards[0];
-
-  useEffect(() => {
-    const section = sectionRef.current;
-
-    if (!section) {
-      return undefined;
-    }
-
-    const isMobileLayout = window.matchMedia('(max-width: 767px)').matches;
-
-    if (isMobileLayout) {
-      return undefined;
-    }
-
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (reduceMotion) {
-      setActiveIncludedIndex(0);
-      return undefined;
-    }
-
-    const context = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: section,
-        start: 'top center',
-        end: 'bottom center',
-        scrub: true,
-        invalidateOnRefresh: true,
-        onUpdate: (self) => {
-          const nextIndex = gsap.utils.clamp(
-            0,
-            includedHighlightCards.length - 1,
-            Math.round(self.progress * (includedHighlightCards.length - 1)),
-          );
-
-          setActiveIncludedIndex((currentIndex) => (
-            currentIndex === nextIndex ? currentIndex : nextIndex
-          ));
-        },
-        onLeaveBack: () => setActiveIncludedIndex(0),
-        onLeave: () => setActiveIncludedIndex(includedHighlightCards.length - 1),
-      });
-    }, section);
-
-    ScrollTrigger.refresh();
-
-    return () => context.revert();
-  }, []);
-
   return (
     <section
       className="blank-included-highlights"
       data-node-id="10581:39986"
       data-name="Tabs [Specs]"
       aria-label="What's Included"
-      ref={sectionRef}
     >
-      <div className="blank-included-highlights__showcase" data-node-id="10581:40000">
-        <div className="blank-included-highlights__copy-panel">
-          <h2 data-node-id="10581:39988">What&rsquo;s Included</h2>
-          <ol className="blank-included-highlights__item-list" aria-label="Included items">
-            {includedHighlightCards.map((item, index) => (
-              <li
-                className={index === activeIncludedIndex ? 'is-active' : ''}
-                data-node-id={item.labelNodeId}
-                key={item.label}
-              >
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <strong>{item.label}</strong>
-              </li>
-            ))}
-          </ol>
-        </div>
+      <header className="blank-included-highlights__header" data-node-id="10581:39987">
+        <h2 data-node-id="10581:39988">What&rsquo;s Included</h2>
+      </header>
+      <div className="blank-included-highlights__divider" aria-hidden="true" />
 
-        <figure className="blank-included-highlights__image-panel" data-node-id={activeIncludedItem.nodeId}>
-          {includedHighlightCards.map((item, index) => (
-            <img
-              className={index === activeIncludedIndex ? 'is-active' : ''}
-              src={item.image}
-              alt=""
-              aria-hidden="true"
-              key={item.label}
-            />
-          ))}
-        </figure>
+      <div className="blank-included-highlights__cards" data-node-id="10581:40000">
+        {includedHighlightCards.map((item) => (
+          <article className="blank-included-highlights__card" data-node-id={item.nodeId} key={item.label}>
+            <img src={item.image} alt="" aria-hidden="true" />
+            <p data-node-id={item.labelNodeId}>{item.label}</p>
+          </article>
+        ))}
       </div>
     </section>
   );
@@ -4330,7 +4251,7 @@ export default function BlankPage({
 
       {showDesktopKeepWarmIntro && !showDesktopFeatureStory ? <BlankDesktopKeepWarmIntro /> : null}
 
-      {showDesktopVarietalIntro ? (
+      {showDesktopVarietalIntro && !showDesktopFeatureStory ? (
         <BlankMobileSequenceFeature
           title="5 Varietal Settings"
           copy="Pre-programmed and customizable One-touch functionalities create ideal brewing conditions for Black, Green, White or Oolong teas and French Press Coffee."
@@ -4343,7 +4264,7 @@ export default function BlankPage({
         />
       ) : null}
 
-      {showDesktopKeepWarmIntro ? (
+      {showDesktopKeepWarmIntro && !showDesktopFeatureStory ? (
         <BlankMobileSequenceFeature
           title="Keep Warm Button"
           copy="One-touch functionality keeps your water warm for 20 minutes and can be activated before during or on completion of the water heating cycle."
@@ -4357,7 +4278,7 @@ export default function BlankPage({
         />
       ) : null}
 
-      {hideDesktopSoftLidSection ? <BlankSoftLidSection mobileOnly /> : null}
+      {hideDesktopSoftLidSection && !showDesktopFeatureStory ? <BlankSoftLidSection mobileOnly /> : null}
 
       {showDesktopSoftOpeningIntro && !showDesktopFeatureStory ? <BlankDesktopSoftOpeningIntro /> : null}
 
