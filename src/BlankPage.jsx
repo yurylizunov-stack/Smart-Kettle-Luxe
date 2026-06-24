@@ -9,13 +9,188 @@ import { TestingFooter } from './testing/MotionSupport.jsx';
 
 gsap.registerPlugin(ScrollTrigger);
 
+const scheduleIdleWork = (callback) => {
+  if (typeof window === 'undefined') {
+    return { cancel: () => {} };
+  }
+
+  if ('requestIdleCallback' in window) {
+    const id = window.requestIdleCallback(callback, { timeout: 1600 });
+    return { cancel: () => window.cancelIdleCallback(id) };
+  }
+
+  const id = window.setTimeout(callback, 80);
+  return { cancel: () => window.clearTimeout(id) };
+};
+
+const warmImage = (src, fetchPriority = 'low') => {
+  const image = new Image();
+
+  image.decoding = 'async';
+  image.fetchPriority = fetchPriority;
+  image.src = src;
+
+  if (image.decode) {
+    image.decode().catch(() => {});
+  }
+
+  return image;
+};
+
+const warmSequenceFrames = (framePath, startFrame = 0, endFrame = 0, maxFrames = 72) => {
+  const frameCount = Math.max(0, endFrame - startFrame + 1);
+
+  if (!framePath || frameCount <= 0) {
+    return () => {};
+  }
+
+  const step = Math.max(1, Math.ceil(frameCount / maxFrames));
+  const frames = new Set([startFrame, endFrame]);
+
+  for (let frame = startFrame; frame <= endFrame; frame += step) {
+    frames.add(frame);
+  }
+
+  let isCancelled = false;
+  let scheduledWork = null;
+  const frameQueue = Array.from(frames).sort((a, b) => a - b);
+
+  const loadNext = () => {
+    scheduledWork = null;
+
+    if (isCancelled || !frameQueue.length) {
+      return;
+    }
+
+    warmImage(framePath(frameQueue.shift()));
+
+    if (frameQueue.length) {
+      scheduledWork = scheduleIdleWork(loadNext);
+    }
+  };
+
+  scheduledWork = scheduleIdleWork(loadNext);
+
+  return () => {
+    isCancelled = true;
+    scheduledWork?.cancel();
+  };
+};
+
+const retrySequenceImage = (image) => {
+  const retryCount = Number(image.dataset.retryCount || 0);
+
+  if (retryCount >= 2) {
+    return;
+  }
+
+  const source = image.getAttribute('src');
+
+  if (!source) {
+    return;
+  }
+
+  image.dataset.retryCount = String(retryCount + 1);
+
+  window.setTimeout(() => {
+    const separator = source.includes('?') ? '&' : '?';
+    image.src = `${source}${separator}retry=${retryCount + 1}`;
+  }, 220 * (retryCount + 1));
+};
+
+const playMutedVideo = (video) => {
+  if (!video || document.visibilityState === 'hidden') {
+    return;
+  }
+
+  video.muted = true;
+  video.playsInline = true;
+
+  const playPromise = video.play();
+
+  if (playPromise) {
+    playPromise.catch(() => {});
+  }
+};
+
+const bindResilientAutoplayVideo = (video) => {
+  if (!video) {
+    return () => {};
+  }
+
+  let retryTimeout = 0;
+
+  const schedulePlay = () => {
+    window.clearTimeout(retryTimeout);
+    retryTimeout = window.setTimeout(() => playMutedVideo(video), 180);
+  };
+
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      schedulePlay();
+    }
+  };
+
+  ['canplay', 'loadeddata', 'stalled', 'waiting', 'suspend', 'emptied'].forEach((eventName) => {
+    video.addEventListener(eventName, schedulePlay);
+  });
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('pageshow', schedulePlay);
+  schedulePlay();
+
+  return () => {
+    window.clearTimeout(retryTimeout);
+    ['canplay', 'loadeddata', 'stalled', 'waiting', 'suspend', 'emptied'].forEach((eventName) => {
+      video.removeEventListener(eventName, schedulePlay);
+    });
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.removeEventListener('pageshow', schedulePlay);
+  };
+};
+
 function BlankHeroOnlySection() {
+  const stageRef = useRef(null);
   const heroOverlay = 0.1;
   const overlayStops = {
     top: heroOverlay,
     mid: heroOverlay * 0.45,
     bottom: heroOverlay * 1.75,
   };
+
+  useEffect(() => {
+    const stage = stageRef.current;
+
+    if (!stage) {
+      return undefined;
+    }
+
+    const videos = Array.from(stage.querySelectorAll('video'));
+    const cleanupVideoBindings = videos.map(bindResilientAutoplayVideo);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const video = entry.target;
+
+          if (entry.isIntersecting) {
+            playMutedVideo(video);
+            return;
+          }
+
+          video.pause();
+        });
+      },
+      { threshold: 0.18 },
+    );
+
+    videos.forEach((video) => observer.observe(video));
+
+    return () => {
+      observer.disconnect();
+      cleanupVideoBindings.forEach((cleanup) => cleanup());
+    };
+  }, []);
 
   return (
     <>
@@ -34,14 +209,14 @@ function BlankHeroOnlySection() {
           '--hero-copy-gap': '19px',
         }}
       >
-        <div className="hero-only__stage">
+        <div className="hero-only__stage" ref={stageRef}>
           <video
             className="hero-only__video hero-only__video--desktop"
             autoPlay
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="auto"
             aria-label="Smart Kettle Luxe desktop hero video"
           >
             <source src="/assets/videos/desktop_hero.mp4" type="video/mp4" />
@@ -53,7 +228,7 @@ function BlankHeroOnlySection() {
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="auto"
             aria-label="Smart Kettle Luxe mobile hero video"
           >
             <source src="/assets/videos/mobile_hero.mp4" type="video/mp4" />
@@ -933,18 +1108,12 @@ function BlankGallerySection({
       return undefined;
     }
 
-    const playVideo = () => {
-      const playPromise = video.play();
-
-      if (playPromise) {
-        playPromise.catch(() => {});
-      }
-    };
+    const cleanupVideoBinding = bindResilientAutoplayVideo(video);
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          playVideo();
+          playMutedVideo(video);
           return;
         }
 
@@ -955,7 +1124,10 @@ function BlankGallerySection({
 
     observer.observe(video);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cleanupVideoBinding();
+    };
   }, [isPlaceholder, placeholderVideo]);
 
   return (
@@ -974,7 +1146,7 @@ function BlankGallerySection({
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="auto"
             aria-label={placeholderVideo.label}
             ref={placeholderVideoRef}
           >
@@ -1492,27 +1664,14 @@ function BlankDesktopFeatureStory({
     const chapterCount = items.length;
     const segmentSize = 1 / chapterCount;
 
-    items.forEach((item) => {
+    const cancelSequenceWarmups = items.map((item) => {
       if (!item.framePath) {
-        const staticImage = new Image();
-        staticImage.src = item.image;
-        if (staticImage.decode) {
-          staticImage.decode().catch(() => {});
-        }
-        return;
+        warmImage(item.image);
+        return () => {};
       }
 
       const startFrame = item.startFrame || 0;
-
-      Array.from({ length: item.endFrame - startFrame + 1 }, (_, index) => {
-        const frame = startFrame + index;
-        const sequenceImage = new Image();
-        sequenceImage.src = item.framePath(frame);
-        if (sequenceImage.decode) {
-          sequenceImage.decode().catch(() => {});
-        }
-        return sequenceImage;
-      });
+      return warmSequenceFrames(item.framePath, startFrame, item.endFrame);
     });
 
     const drawFrame = (item, image, localProgress) => {
@@ -1530,6 +1689,8 @@ function BlankDesktopFeatureStory({
       const source = item.framePath(frameIndex);
 
       if (image.getAttribute('src') !== source) {
+        image.dataset.retryCount = '0';
+        image.fetchPriority = 'high';
         image.src = source;
       }
 
@@ -1657,7 +1818,10 @@ function BlankDesktopFeatureStory({
 
     ScrollTrigger.refresh();
 
-    return () => context.revert();
+    return () => {
+      cancelSequenceWarmups.forEach((cancelWarmup) => cancelWarmup());
+      context.revert();
+    };
   }, [isEnabled, items, shouldAnimateVarietalPosition, shouldTransitionPage]);
 
   const scrollToChapter = (index) => {
@@ -1698,6 +1862,9 @@ function BlankDesktopFeatureStory({
                 alt=""
                 aria-hidden="true"
                 data-frame={item.framePath ? String(item.startFrame || 0) : undefined}
+                decoding="async"
+                fetchPriority={index === 0 ? 'high' : 'low'}
+                onError={(event) => retrySequenceImage(event.currentTarget)}
                 ref={(node) => {
                   imageRefs.current[index] = node;
                 }}
@@ -2216,24 +2383,14 @@ function BlankMobileFeatureStory({
     const chapterCount = items.length;
     const segmentSize = 1 / chapterCount;
 
-    items.forEach((item) => {
+    const cancelSequenceWarmups = items.map((item) => {
       if (!item.framePath) {
-        return;
+        warmImage(item.image);
+        return () => {};
       }
 
       const startFrame = item.startFrame || 0;
-
-      Array.from({ length: item.endFrame - startFrame + 1 }, (_, index) => {
-        const frame = startFrame + index;
-        const sequenceImage = new Image();
-        sequenceImage.src = item.framePath(frame);
-
-        if (sequenceImage.decode) {
-          sequenceImage.decode().catch(() => {});
-        }
-
-        return sequenceImage;
-      });
+      return warmSequenceFrames(item.framePath, startFrame, item.endFrame, 48);
     });
 
     const drawFrame = (item, image, localProgress) => {
@@ -2251,6 +2408,8 @@ function BlankMobileFeatureStory({
       const source = item.framePath(frameIndex);
 
       if (image.getAttribute('src') !== source) {
+        image.dataset.retryCount = '0';
+        image.fetchPriority = 'high';
         image.src = source;
       }
 
@@ -2315,7 +2474,10 @@ function BlankMobileFeatureStory({
 
     ScrollTrigger.refresh();
 
-    return () => context.revert();
+    return () => {
+      cancelSequenceWarmups.forEach((cancelWarmup) => cancelWarmup());
+      context.revert();
+    };
   }, [isEnabled, items]);
 
   const scrollToChapter = (index) => {
@@ -2356,6 +2518,9 @@ function BlankMobileFeatureStory({
                 alt=""
                 aria-hidden="true"
                 data-frame={item.framePath ? String(item.startFrame || 0) : undefined}
+                decoding="async"
+                fetchPriority={index === 0 ? 'high' : 'low'}
+                onError={(event) => retrySequenceImage(event.currentTarget)}
                 ref={(node) => {
                   imageRefs.current[index] = node;
                 }}
@@ -2420,17 +2585,7 @@ function BlankMobileSequenceFeature({
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let currentFrame = reduceMotion ? endFrame : 0;
-    const images = Array.from({ length: endFrame + 1 }, (_, frame) => {
-      const sequenceImage = new Image();
-      sequenceImage.src = framePath(frame);
-      return sequenceImage;
-    });
-
-    images.forEach((sequenceImage) => {
-      if (sequenceImage.decode) {
-        sequenceImage.decode().catch(() => {});
-      }
-    });
+    const cancelSequenceWarmup = warmSequenceFrames(framePath, 0, endFrame, 48);
 
     const drawFrame = (frame) => {
       const frameIndex = gsap.utils.clamp(0, endFrame, Math.round(frame));
@@ -2438,6 +2593,8 @@ function BlankMobileSequenceFeature({
 
       if (image.getAttribute('src') !== source) {
         image.dataset.pendingFrame = String(frameIndex);
+        image.dataset.retryCount = '0';
+        image.fetchPriority = 'high';
         image.src = source;
       }
 
@@ -2445,7 +2602,7 @@ function BlankMobileSequenceFeature({
       image.dataset.frame = String(frameIndex);
     };
 
-    const firstFrame = images[currentFrame];
+    const firstFrame = warmImage(framePath(currentFrame), 'high');
     const handleFirstFrameLoad = () => drawFrame(currentFrame);
 
     if (firstFrame.complete && firstFrame.naturalWidth > 0) {
@@ -2457,6 +2614,7 @@ function BlankMobileSequenceFeature({
 
     if (reduceMotion) {
       return () => {
+        cancelSequenceWarmup();
         firstFrame.removeEventListener('load', handleFirstFrameLoad);
       };
     }
@@ -2612,6 +2770,7 @@ function BlankMobileSequenceFeature({
     ScrollTrigger.refresh();
 
     return () => {
+      cancelSequenceWarmup();
       firstFrame.removeEventListener('load', handleFirstFrameLoad);
       removeEntryOffset?.();
       removeCopyExit?.();
@@ -2633,6 +2792,9 @@ function BlankMobileSequenceFeature({
             alt=""
             aria-hidden="true"
             data-frame="0"
+            decoding="async"
+            fetchPriority="high"
+            onError={(event) => retrySequenceImage(event.currentTarget)}
             ref={imageRef}
           />
         </div>
@@ -3214,17 +3376,7 @@ function BlankDesktopTechSpecs() {
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let currentFrame = desktopTechSpecsEndFrame;
-    const images = Array.from({ length: desktopTechSpecsEndFrame + 1 }, (_, frame) => {
-      const sequenceImage = new Image();
-      sequenceImage.src = desktopTechSpecsFramePath(frame);
-      return sequenceImage;
-    });
-
-    images.forEach((sequenceImage) => {
-      if (sequenceImage.decode) {
-        sequenceImage.decode().catch(() => {});
-      }
-    });
+    const cancelSequenceWarmup = warmSequenceFrames(desktopTechSpecsFramePath, 0, desktopTechSpecsEndFrame, 64);
 
     const drawFrame = (frame) => {
       const frameIndex = gsap.utils.clamp(0, desktopTechSpecsEndFrame, Math.round(frame));
@@ -3232,6 +3384,8 @@ function BlankDesktopTechSpecs() {
 
       if (image.getAttribute('src') !== source) {
         image.dataset.pendingFrame = String(frameIndex);
+        image.dataset.retryCount = '0';
+        image.fetchPriority = 'high';
         image.src = source;
       }
 
@@ -3239,7 +3393,7 @@ function BlankDesktopTechSpecs() {
       image.dataset.frame = String(frameIndex);
     };
 
-    const firstFrame = images[currentFrame];
+    const firstFrame = warmImage(desktopTechSpecsFramePath(currentFrame), 'high');
     const handleFirstFrameLoad = () => drawFrame(currentFrame);
 
     if (firstFrame.complete && firstFrame.naturalWidth > 0) {
@@ -3251,6 +3405,7 @@ function BlankDesktopTechSpecs() {
 
     if (reduceMotion) {
       return () => {
+        cancelSequenceWarmup();
         firstFrame.removeEventListener('load', handleFirstFrameLoad);
       };
     }
@@ -3309,6 +3464,7 @@ function BlankDesktopTechSpecs() {
     ScrollTrigger.refresh();
 
     return () => {
+      cancelSequenceWarmup();
       firstFrame.removeEventListener('load', handleFirstFrameLoad);
       context.revert();
     };
@@ -3335,6 +3491,9 @@ function BlankDesktopTechSpecs() {
             src={desktopTechSpecsFramePath(desktopTechSpecsEndFrame)}
             alt=""
             data-frame="0"
+            decoding="async"
+            fetchPriority="high"
+            onError={(event) => retrySequenceImage(event.currentTarget)}
             ref={imageRef}
           />
         </figure>
@@ -3441,17 +3600,15 @@ function BlankMobileTechSpecs() {
     }
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const images = Array.from({ length: mobileTechSpecsEndFrame + 1 }, (_, index) => {
-      const sequenceImage = new Image();
-      sequenceImage.src = mobileTechSpecsFramePath(index);
-      return sequenceImage;
-    });
+    const cancelSequenceWarmup = warmSequenceFrames(mobileTechSpecsFramePath, 0, mobileTechSpecsEndFrame, 40);
 
     const drawFrame = (nextFrame) => {
       const frameIndex = gsap.utils.wrap(0, mobileTechSpecsEndFrame + 1, Math.round(nextFrame));
       const source = mobileTechSpecsFramePath(frameIndex);
 
       if (image.getAttribute('src') !== source) {
+        image.dataset.retryCount = '0';
+        image.fetchPriority = 'high';
         image.src = source;
       }
 
@@ -3461,7 +3618,7 @@ function BlankMobileTechSpecs() {
     drawFrame(0);
 
     if (reduceMotion) {
-      return undefined;
+      return () => cancelSequenceWarmup();
     }
 
     let animationFrame = 0;
@@ -3485,6 +3642,7 @@ function BlankMobileTechSpecs() {
     window.addEventListener('resize', requestUpdate);
 
     return () => {
+      cancelSequenceWarmup();
       window.removeEventListener('scroll', requestUpdate);
       window.removeEventListener('resize', requestUpdate);
 
@@ -3503,7 +3661,15 @@ function BlankMobileTechSpecs() {
       <div className="blank-mobile-info-divider" />
 
       <figure className="blank-mobile-tech-specs__image" aria-hidden="true">
-        <img src={mobileTechSpecsFramePath(0)} alt="" data-frame="0" ref={imageRef} />
+        <img
+          src={mobileTechSpecsFramePath(0)}
+          alt=""
+          data-frame="0"
+          decoding="async"
+          fetchPriority="high"
+          onError={(event) => retrySequenceImage(event.currentTarget)}
+          ref={imageRef}
+        />
       </figure>
 
       <dl className="blank-mobile-tech-specs__list">
