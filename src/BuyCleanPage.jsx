@@ -1665,6 +1665,7 @@ export default function BuyCleanPage() {
                   );
                 })}
               </section>
+              <div className="buy-clean-rail-spacer" aria-hidden="true" />
             </div>
             {isOption2Layout ? (
               <PurchaseDock
