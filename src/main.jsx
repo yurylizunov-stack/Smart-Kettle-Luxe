@@ -6,6 +6,7 @@ import HeroOnlyPage from './HeroOnlyPage.jsx';
 import StickyNavBlankPage from './StickyNavBlankPage.jsx';
 import Update2Page from './Update2Page.jsx';
 import ReviewHighlightsPage from './ReviewHighlightsPage.jsx';
+import BuyCleanPage from './BuyCleanPage.jsx';
 
 const normalizeRoute = (value) => {
   const route = value?.startsWith('/') ? value : `/${value || ''}`;
@@ -24,7 +25,9 @@ const Page = ['/update-2', '/update2'].includes(normalizedPath)
   ? Update2Page
   : ['/update-3', '/update3'].includes(normalizedPath)
     ? BlankPage
-  : ['/review-highlights', '/reviews-highlight', '/product-detail', '/buy'].includes(normalizedPath)
+  : ['/buy', '/buy-clean'].includes(normalizedPath)
+    ? BuyCleanPage
+  : ['/review-highlights', '/reviews-highlight', '/product-detail'].includes(normalizedPath)
     ? ReviewHighlightsPage
   : ['/hero', '/hero-only', '/video-hero'].includes(normalizedPath)
     ? HeroOnlyPage
