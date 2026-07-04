@@ -9,6 +9,7 @@ const ACCORDION_ASSET_ROOT = `${BUY_CLEAN_ASSET_ROOT}/accordions`;
 const CAROUSEL_ASSET_ROOT = `${BUY_CLEAN_ASSET_ROOT}/carousels`;
 const FEATURE_HIGHLIGHT_ASSET_ROOT = `${BUY_CLEAN_ASSET_ROOT}/feature-highlights`;
 const REVIEW_ASSET_ROOT = `${BUY_CLEAN_ASSET_ROOT}/reviews`;
+const VIDEO_ASSET_ROOT = '/assets/videos';
 const STANDARD_PRICE = 219.95;
 const BRASS_PRICE = 249.95;
 const MAX_QUANTITY = 3;
@@ -21,6 +22,21 @@ const layouts = {
       railInset: 24,
       railGap: 48,
       swatchGap: 8,
+      railTextBump: false,
+    },
+  },
+  option1: {
+    label: 'Option 1',
+    variables: {
+      heroScale: 1.36,
+      railInset: 24,
+      railGap: 48,
+      swatchGap: 8,
+      isolatedSwatches: false,
+      largeSwatches: false,
+      hideFeatures: false,
+      bottomThumbnails: false,
+      railTextBump: false,
     },
   },
   option2: {
@@ -33,6 +49,22 @@ const layouts = {
       isolatedSwatches: false,
       largeSwatches: false,
       hideFeatures: false,
+      bottomThumbnails: false,
+      railTextBump: false,
+    },
+  },
+  option3: {
+    label: 'Option 3',
+    variables: {
+      heroScale: 1.36,
+      railInset: 24,
+      railGap: 48,
+      swatchGap: 8,
+      isolatedSwatches: false,
+      largeSwatches: false,
+      hideFeatures: true,
+      bottomThumbnails: false,
+      railTextBump: false,
     },
   },
 };
@@ -43,6 +75,13 @@ const globalVariables = {
   pageMargin: 40,
   gutter: 20,
   columns: 12,
+};
+
+const layoutToggleDefaults = {
+  option3: {
+    accordionMoved: true,
+    greySpacer: true,
+  },
 };
 
 const reviewCountLabel = '190 Reviews';
@@ -128,11 +167,28 @@ const technicalSpecColumns = [
   ],
 ];
 
+const railTechnicalSpecColumns = [
+  [
+    { title: 'Dimensions (WxDxH)', copy: '7.1" x 9.6" x 9.9"' },
+    { title: 'Construction Materials', copy: 'Brushed Stainless Steel' },
+    { title: 'Capacity', copy: '57 oz. / 1.7 liter / 7 Cup' },
+    { title: 'Settings', copy: ['5 Preprogrammed Temperature Settings', 'Keep Warm Button', 'Auto shut off and boil dry protection'] },
+  ],
+  [
+    { title: 'Voltage', copy: '110-120 Volts' },
+    { title: 'Warranty', copy: '1 Year Limited Warranty' },
+    { title: 'Weight', copy: '3.86 lbs / 1.75 kg' },
+    { title: 'Power', copy: '1500 Watts' },
+  ],
+];
+
 const includedAccordionItems = [
   { title: 'Kettle Body', image: `${ACCORDION_ASSET_ROOT}/included-kettle-body.png` },
-  { title: 'Kettle Body', image: `${ACCORDION_ASSET_ROOT}/included-kettle-base.png` },
-  { title: 'Kettle Body', image: `${ACCORDION_ASSET_ROOT}/included-manual-card.png` },
+  { title: 'Kettle Base', image: `${ACCORDION_ASSET_ROOT}/included-kettle-base.png` },
+  { title: 'Manual and Warranty Card', image: `${ACCORDION_ASSET_ROOT}/included-manual-card.png` },
 ];
+
+const supportRailItems = ['Product Hub', 'Instruction Manual', 'Return Policies'];
 
 const faqItems = [
   {
@@ -157,20 +213,25 @@ const featureHighlightCards = [
   },
   {
     title: 'Keep Warm Button',
-    copy: 'Maintain your selected temperature for another pour with the keep warm button.',
+    copy: 'One-touch functionality keeps your water warm for 20 minutes and can be activated before, during or on completion of the water heating cycle.',
     image: `${FEATURE_HIGHLIGHT_ASSET_ROOT}/varietal-settings.png`,
   },
   {
     title: 'Soft Opening™ Lid',
-    copy: 'A soft opening lid releases steam gently and helps prevent hot water splash back.',
+    copy: 'A bubbling brew presents a few hazards on the way from kettle to cup. This specialized lid gently releases steam and eliminates splashing.',
     image: `${FEATURE_HIGHLIGHT_ASSET_ROOT}/varietal-settings.png`,
   },
   {
-    title: 'BPA Free Materials',
-    copy: 'Food-contact materials are BPA free, with durable stainless steel construction.',
+    title: 'BPA Free Material',
+    copy: "Dual sided, high visibility water windows make it easy to make sure you don't heat more water than you need. Made from BPA Free materials.",
     image: `${FEATURE_HIGHLIGHT_ASSET_ROOT}/varietal-settings.png`,
   },
 ];
+
+const option3FeaturePanelItems = featureHighlightCards.map((item, index) => ({
+  ...item,
+  video: `${VIDEO_ASSET_ROOT}/Feature ${index + 1}.mp4`,
+}));
 
 const reviewRows = [
   { label: '5 stars', count: 135 },
@@ -522,13 +583,15 @@ function AccordionHeader({ title, isOpen, onToggle }) {
   );
 }
 
-function TechnicalSpecifications({ isOpen, onToggle }) {
+function TechnicalSpecifications({ isOpen, onToggle, isRail = false }) {
+  const specColumns = isRail ? railTechnicalSpecColumns : technicalSpecColumns;
+
   return (
     <section className={`buy-clean-accordion${isOpen ? ' is-open' : ''}`} aria-label="Technical Specifications">
       <AccordionHeader title="Technical Specifications" isOpen={isOpen} onToggle={onToggle} />
       {isOpen ? (
         <div className="buy-clean-accordion__specs">
-          {technicalSpecColumns.map((column, columnIndex) => (
+          {specColumns.map((column, columnIndex) => (
             <div className="buy-clean-accordion__spec-column" key={`spec-column-${columnIndex}`}>
               {column.map((item) => (
                 <div className="buy-clean-accordion__text-block" key={item.title}>
@@ -568,48 +631,200 @@ function IncludedAccordion({ isOpen, onToggle }) {
   );
 }
 
-function SupportAccordion({ isOpen, onToggle }) {
+function SupportAccordion({ isOpen, onToggle, isRail = false }) {
   return (
     <section className={`buy-clean-accordion${isOpen ? ' is-open' : ''}`} aria-label="Support & Documentation">
       <AccordionHeader title="Support & Documentation" isOpen={isOpen} onToggle={onToggle} />
       {isOpen ? (
-        <div className="buy-clean-accordion__support">
-          <article className="buy-clean-support-card buy-clean-support-card--large" aria-label="Product Hub">
-            <img src={`${ACCORDION_ASSET_ROOT}/support-product-hub.png`} alt="" />
-            <span>
-              <strong>Product Hub</strong>
-              <em>Download setup, cleaning, and safety guidance.</em>
-            </span>
-            <img className="buy-clean-support-card__arrow" src={`${ACCORDION_ASSET_ROOT}/support-arrow-right.svg`} alt="" aria-hidden="true" />
-          </article>
-          <div className="buy-clean-accordion__support-stack">
-            <article className="buy-clean-support-card buy-clean-support-card--small" aria-label="Instruction Manual">
-              <span>
-                <strong>Instruction<br />Manual</strong>
-              </span>
-              <img className="buy-clean-support-card__arrow" src={`${ACCORDION_ASSET_ROOT}/support-arrow-right.svg`} alt="" aria-hidden="true" />
-              <img src={`${ACCORDION_ASSET_ROOT}/support-instruction-manual.png`} alt="" />
-            </article>
-            <article className="buy-clean-support-card buy-clean-support-card--small" aria-label="Return Policies">
-              <span>
-                <strong>Return<br />Policies</strong>
-              </span>
-              <img className="buy-clean-support-card__arrow" src={`${ACCORDION_ASSET_ROOT}/support-arrow-right.svg`} alt="" aria-hidden="true" />
-              <img src={`${ACCORDION_ASSET_ROOT}/support-return-policies.png`} alt="" />
-            </article>
+        isRail ? (
+          <div className="buy-clean-accordion__support buy-clean-accordion__support--rail">
+            {supportRailItems.map((item) => (
+              <button type="button" key={item}>
+                <span>{item}</span>
+                <i aria-hidden="true" />
+              </button>
+            ))}
           </div>
-        </div>
+        ) : (
+          <div className="buy-clean-accordion__support">
+            <article className="buy-clean-support-card buy-clean-support-card--large" aria-label="Product Hub">
+              <img src={`${ACCORDION_ASSET_ROOT}/support-product-hub.png`} alt="" />
+              <span>
+                <strong>Product Hub</strong>
+                <em>Download setup, cleaning, and safety guidance.</em>
+              </span>
+              <img className="buy-clean-support-card__arrow" src={`${ACCORDION_ASSET_ROOT}/support-arrow-right.svg`} alt="" aria-hidden="true" />
+            </article>
+            <div className="buy-clean-accordion__support-stack">
+              <article className="buy-clean-support-card buy-clean-support-card--small" aria-label="Instruction Manual">
+                <span>
+                  <strong>Instruction<br />Manual</strong>
+                </span>
+                <img className="buy-clean-support-card__arrow" src={`${ACCORDION_ASSET_ROOT}/support-arrow-right.svg`} alt="" aria-hidden="true" />
+                <img src={`${ACCORDION_ASSET_ROOT}/support-instruction-manual.png`} alt="" />
+              </article>
+              <article className="buy-clean-support-card buy-clean-support-card--small" aria-label="Return Policies">
+                <span>
+                  <strong>Return<br />Policies</strong>
+                </span>
+                <img className="buy-clean-support-card__arrow" src={`${ACCORDION_ASSET_ROOT}/support-arrow-right.svg`} alt="" aria-hidden="true" />
+                <img src={`${ACCORDION_ASSET_ROOT}/support-return-policies.png`} alt="" />
+              </article>
+            </div>
+          </div>
+        )
       ) : null}
     </section>
   );
 }
 
-function CustomerReviewsAccordion({ isOpen, onToggle, reviewsRef }) {
+function Option3RailAccordionHeader({ title, isOpen, onToggle }) {
+  return (
+    <button className="buy-clean-option3-rail-accordion__header" type="button" aria-expanded={isOpen} onClick={onToggle}>
+      <span>{title}</span>
+      <i className={isOpen ? 'is-open' : ''} aria-hidden="true" />
+    </button>
+  );
+}
+
+function Option3RailAccordions({ openAccordions, onToggleAccordion }) {
+  return (
+    <section className="buy-clean-option3-rail-accordions" aria-label="Product details">
+      <article className="buy-clean-option3-rail-accordion">
+        <Option3RailAccordionHeader title="Technical Specifications" isOpen={openAccordions.has('technical')} onToggle={() => onToggleAccordion('technical')} />
+        {openAccordions.has('technical') ? (
+          <div className="buy-clean-option3-rail-accordion__specs">
+            {railTechnicalSpecColumns.map((column, columnIndex) => (
+              <div key={`option3-spec-column-${columnIndex}`}>
+                {column.map((item) => (
+                  <section key={item.title}>
+                    <h3>{item.title}</h3>
+                    {Array.isArray(item.copy) ? (
+                      <div>
+                        {item.copy.map((line) => <p key={line}>{line}</p>)}
+                      </div>
+                    ) : (
+                      <p>{item.copy}</p>
+                    )}
+                  </section>
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </article>
+
+      <article className="buy-clean-option3-rail-accordion">
+        <Option3RailAccordionHeader title="What's Included" isOpen={openAccordions.has('included')} onToggle={() => onToggleAccordion('included')} />
+        {openAccordions.has('included') ? (
+          <div className="buy-clean-option3-rail-accordion__included">
+            {includedAccordionItems.map((item) => (
+              <section key={item.title}>
+                <img src={item.image} alt="" />
+                <p>{item.title}</p>
+              </section>
+            ))}
+          </div>
+        ) : null}
+      </article>
+
+      <article className="buy-clean-option3-rail-accordion">
+        <Option3RailAccordionHeader title="Support & Documentation" isOpen={openAccordions.has('support')} onToggle={() => onToggleAccordion('support')} />
+        {openAccordions.has('support') ? (
+          <div className="buy-clean-option3-rail-accordion__support">
+            {supportRailItems.map((item) => (
+              <button type="button" key={item}>
+                <span>{item}</span>
+                <i aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </article>
+    </section>
+  );
+}
+
+function CustomerReviewsPanel() {
   const totalReviews = reviewRows.reduce((total, row) => total + row.count, 0);
   const mediaItems = customerReviewMedia.length
     ? customerReviewMedia
     : customerReviews.flatMap((review) => review.images.map((image) => ({ image, author: review.author })));
 
+  return (
+    <div className="buy-clean-reviews-panel">
+      <div className="buy-clean-accordion__reviews">
+        <div className="buy-clean-reviews-summary">
+          <strong>4.5</strong>
+          <div>
+            <p>
+              <ReviewStars />
+              <span>190 reviews</span>
+            </p>
+            <small>135 out 166 (81%) reviewers recommended this product</small>
+          </div>
+        </div>
+        <div className="buy-clean-reviews-meter-list">
+          {reviewRows.map((row) => (
+            <div className="buy-clean-reviews-meter" key={row.label}>
+              <span>{row.label}</span>
+              <i aria-hidden="true">
+                <b style={{ '--review-meter-width': `${totalReviews ? (row.count / totalReviews) * 100 : 0}%` }} />
+              </i>
+              <em>{String(row.count).padStart(2, '0')}</em>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="buy-clean-reviews-overview">
+        <section>
+          <h3>Review this Product</h3>
+          <p>Adding a review will require a valid email for verification</p>
+          <button type="button">Review</button>
+        </section>
+        <section>
+          <h3>Reviews Summary</h3>
+          <p>{reviewSummaryCopy}</p>
+        </section>
+      </div>
+
+      <div className="buy-clean-reviews-media">
+        <header>
+          <h3>Customer Images and Videos</h3>
+          <button type="button">See all</button>
+        </header>
+        <div>
+          {mediaItems.map((item, index) => (
+            <figure key={`review-media-${item.author}-${index}`}>
+              <img src={item.image} alt={`Customer media ${index + 1} from ${item.author}`} />
+            </figure>
+          ))}
+        </div>
+      </div>
+
+      <div className="buy-clean-customer-reviews" aria-label="Customer review highlights">
+        {customerReviews.map((review) => (
+          <ReviewListItem review={review} key={`${review.author}-${review.title}`} />
+        ))}
+      </div>
+
+      <footer className="buy-clean-reviews-pagination">
+        <span>1 - 8 of 193 Reviews</span>
+        <div>
+          <button type="button" aria-label="Previous reviews" disabled>
+            <i aria-hidden="true" />
+          </button>
+          <button type="button" aria-label="Next reviews">
+            <i aria-hidden="true" />
+          </button>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function CustomerReviewsAccordion({ isOpen, onToggle, reviewsRef }) {
   return (
     <section
       className={`buy-clean-accordion${isOpen ? ' is-open' : ''}`}
@@ -618,77 +833,7 @@ function CustomerReviewsAccordion({ isOpen, onToggle, reviewsRef }) {
       aria-label="Customer Reviews"
     >
       <AccordionHeader title="Customer Reviews" isOpen={isOpen} onToggle={onToggle} />
-      {isOpen ? (
-        <div className="buy-clean-reviews-panel">
-          <div className="buy-clean-accordion__reviews">
-            <div className="buy-clean-reviews-summary">
-              <strong>4.5</strong>
-              <div>
-                <p>
-                  <ReviewStars />
-                  <span>190 reviews</span>
-                </p>
-                <small>135 out 166 (81%) reviewers recommended this product</small>
-              </div>
-            </div>
-            <div className="buy-clean-reviews-meter-list">
-              {reviewRows.map((row) => (
-                <div className="buy-clean-reviews-meter" key={row.label}>
-                  <span>{row.label}</span>
-                  <i aria-hidden="true">
-                    <b style={{ '--review-meter-width': `${totalReviews ? (row.count / totalReviews) * 100 : 0}%` }} />
-                  </i>
-                  <em>{String(row.count).padStart(2, '0')}</em>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="buy-clean-reviews-overview">
-            <section>
-              <h3>Review this Product</h3>
-              <p>Adding a review will require a valid email for verification</p>
-              <button type="button">Review</button>
-            </section>
-            <section>
-              <h3>Reviews Summary</h3>
-              <p>{reviewSummaryCopy}</p>
-            </section>
-          </div>
-
-          <div className="buy-clean-reviews-media">
-            <header>
-              <h3>Customer Images and Videos</h3>
-              <button type="button">See all</button>
-            </header>
-            <div>
-              {mediaItems.map((item, index) => (
-                <figure key={`review-media-${item.author}-${index}`}>
-                  <img src={item.image} alt={`Customer media ${index + 1} from ${item.author}`} />
-                </figure>
-              ))}
-            </div>
-          </div>
-
-          <div className="buy-clean-customer-reviews" aria-label="Customer review highlights">
-            {customerReviews.map((review) => (
-              <ReviewListItem review={review} key={`${review.author}-${review.title}`} />
-            ))}
-          </div>
-
-          <footer className="buy-clean-reviews-pagination">
-            <span>1 - 8 of 193 Reviews</span>
-            <div>
-              <button type="button" aria-label="Previous reviews" disabled>
-                <i aria-hidden="true" />
-              </button>
-              <button type="button" aria-label="Next reviews">
-                <i aria-hidden="true" />
-              </button>
-            </div>
-          </footer>
-        </div>
-      ) : null}
+      {isOpen ? <CustomerReviewsPanel /> : null}
     </section>
   );
 }
@@ -711,13 +856,15 @@ function FaqAccordion() {
   );
 }
 
-function ExpandedAccordions({ openAccordions, onToggleAccordion, reviewsRef }) {
+function ExpandedAccordions({ openAccordions, onToggleAccordion, reviewsRef, hideReviews = false, isRail = false }) {
   return (
     <section className="buy-clean-afterfold" aria-label="Product details">
-      <TechnicalSpecifications isOpen={openAccordions.has('technical')} onToggle={() => onToggleAccordion('technical')} />
+      <TechnicalSpecifications isOpen={openAccordions.has('technical')} onToggle={() => onToggleAccordion('technical')} isRail={isRail} />
       <IncludedAccordion isOpen={openAccordions.has('included')} onToggle={() => onToggleAccordion('included')} />
-      <SupportAccordion isOpen={openAccordions.has('support')} onToggle={() => onToggleAccordion('support')} />
-      <CustomerReviewsAccordion isOpen={openAccordions.has('reviews')} onToggle={() => onToggleAccordion('reviews')} reviewsRef={reviewsRef} />
+      <SupportAccordion isOpen={openAccordions.has('support')} onToggle={() => onToggleAccordion('support')} isRail={isRail} />
+      {!hideReviews ? (
+        <CustomerReviewsAccordion isOpen={openAccordions.has('reviews')} onToggle={() => onToggleAccordion('reviews')} reviewsRef={reviewsRef} />
+      ) : null}
       <FaqAccordion />
     </section>
   );
@@ -748,30 +895,52 @@ function CarouselControls({ align = 'end', canPrevious = false, canNext = true, 
   );
 }
 
-function FeatureHighlights() {
+function FeatureHighlights({ useVideos = false }) {
+  const [selectedFeature, setSelectedFeature] = useState(0);
+  const cards = useVideos ? option3FeaturePanelItems : featureHighlightCards;
+  const activeFeature = cards[selectedFeature] || cards[0];
+  const canCycleFeatures = useVideos && cards.length > 1;
+  const moveFeature = (direction) => {
+    setSelectedFeature((currentIndex) => (
+      (currentIndex + direction + cards.length) % cards.length
+    ));
+  };
+
   return (
-    <section className="buy-clean-feature-highlights" aria-label="Feature Highlights">
+    <section className={`buy-clean-feature-highlights${useVideos ? ' is-video' : ''}`} aria-label="Feature Highlights">
       <div className="buy-clean-feature-highlights__content">
         <div className="buy-clean-feature-highlights__copy">
           <h2>Feature Highlights</h2>
           <div className="buy-clean-feature-highlights__text">
-            <h3>5 Varietal Settings</h3>
-            <p>Pre-programmed and customizable One-touch functionalities create ideal brewing conditions for Black, Green, White or Oolong teas and French Press Coffee.</p>
+            <h3>{activeFeature.title}</h3>
+            <p>{activeFeature.copy}</p>
           </div>
-          <CarouselControls align="start" />
+          <CarouselControls align="start" canPrevious={canCycleFeatures} canNext={canCycleFeatures} onPrevious={() => moveFeature(-1)} onNext={() => moveFeature(1)} />
         </div>
         <figure className="buy-clean-feature-highlights__image">
-          <img src={`${FEATURE_HIGHLIGHT_ASSET_ROOT}/varietal-settings.png`} alt="" />
+          {useVideos ? (
+            <video muted loop autoPlay playsInline preload="metadata" key={activeFeature.video}>
+              <source src={activeFeature.video} type="video/mp4" />
+            </video>
+          ) : (
+            <img src={`${FEATURE_HIGHLIGHT_ASSET_ROOT}/varietal-settings.png`} alt="" />
+          )}
         </figure>
       </div>
       <div className="buy-clean-feature-highlights__mobile">
         <h2>Get the Highlights</h2>
         <div className="buy-clean-feature-highlights__viewport">
           <div className="buy-clean-feature-highlights__track">
-            {featureHighlightCards.map((card) => (
+            {cards.map((card) => (
               <article className="buy-clean-feature-card" key={card.title}>
                 <figure>
-                  <img src={card.image} alt="" />
+                  {useVideos ? (
+                    <video muted loop autoPlay playsInline preload="metadata">
+                      <source src={card.video} type="video/mp4" />
+                    </video>
+                  ) : (
+                    <img src={card.image} alt="" />
+                  )}
                 </figure>
                 <div>
                   <h3>{card.title}</h3>
@@ -1023,6 +1192,37 @@ function SwatchButtons({ selectedColor, onSelectColor }) {
   );
 }
 
+function GalleryThumbs({ activeColor, selectedGallery, onSelectGallery, className = 'buy-clean-thumbs' }) {
+  return (
+    <div className={className} role="tablist" aria-label="Product media">
+      {gallery.map((item) => {
+        const isSelected = selectedGallery === item.id;
+
+        return (
+          <button
+            className={`buy-clean-thumb buy-clean-thumb--${item.type}${isSelected ? ' is-selected' : ''}`}
+            type="button"
+            role="tab"
+            aria-selected={isSelected}
+            aria-label={item.label}
+            onClick={() => onSelectGallery(item.id)}
+            key={item.id}
+          >
+            {item.type === 'video' ? (
+              <video muted playsInline preload="metadata" aria-hidden="true">
+                <source src={item.source} type="video/mp4" />
+              </video>
+            ) : (
+              <img src={activeColor.image} alt="" />
+            )}
+            {item.type === 'video' ? <span className="buy-clean-thumb__play" aria-hidden="true" /> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function MobileGalleryDots({ selectedGallery, onSelectGallery }) {
   return (
     <div className="buy-clean-mobile-dots" aria-label="Product media pagination">
@@ -1051,6 +1251,10 @@ function DebugPanel({
   onPaletteCleanseChange,
   isSmoothScroll,
   onSmoothScrollChange,
+  isAccordionMoved,
+  onAccordionMovedChange,
+  isGreySpacerVisible,
+  onGreySpacerChange,
   isOpen,
 }) {
   if (!isOpen) {
@@ -1061,6 +1265,8 @@ function DebugPanel({
     isolatedSwatches: 'Isolated swatches',
     largeSwatches: 'Large swatch',
     hideFeatures: 'Hide features',
+    bottomThumbnails: 'Bottom thumbnails',
+    railTextBump: 'Rail text bump',
   };
 
   return (
@@ -1105,6 +1311,22 @@ function DebugPanel({
             onChange={(event) => onSmoothScrollChange(event.target.checked)}
           />
         </label>
+        <label className="buy-clean-debug__toggle">
+          <span>Move accordion</span>
+          <input
+            type="checkbox"
+            checked={isAccordionMoved}
+            onChange={(event) => onAccordionMovedChange(event.target.checked)}
+          />
+        </label>
+        <label className="buy-clean-debug__toggle">
+          <span>Grey spacer</span>
+          <input
+            type="checkbox"
+            checked={isGreySpacerVisible}
+            onChange={(event) => onGreySpacerChange(event.target.checked)}
+          />
+        </label>
         {Object.entries(variables).map(([key, value]) => (
           typeof value === 'boolean' ? (
             <label className="buy-clean-debug__toggle" key={key}>
@@ -1145,6 +1367,8 @@ function DebugPanel({
 export default function BuyCleanPage() {
   const reviewsRef = useRef(null);
   const heroSwipeRef = useRef(null);
+  const heroVideoRef = useRef(null);
+  const option3FeatureVideoRef = useRef(null);
   const [selectedColor, setSelectedColor] = useState(0);
   const [selectedGallery, setSelectedGallery] = useState(gallery[0].id);
   const [quantity, setQuantity] = useState(1);
@@ -1161,16 +1385,28 @@ export default function BuyCleanPage() {
   });
   const [isPaletteCleanseVisible, setIsPaletteCleanseVisible] = useState(() => window.localStorage.getItem('buyCleanPaletteCleanse') !== 'false');
   const [isSmoothScroll, setIsSmoothScroll] = useState(true);
+  const [isAccordionMoved, setIsAccordionMoved] = useState(false);
+  const [isGreySpacerVisible, setIsGreySpacerVisible] = useState(false);
   const [isOption2RailReleased, setIsOption2RailReleased] = useState(false);
+  const [isOption3FeaturesOpen, setIsOption3FeaturesOpen] = useState(false);
+  const [option3PanelMode, setOption3PanelMode] = useState('features');
+  const [selectedOption3Feature, setSelectedOption3Feature] = useState(0);
   const [galleryDirection, setGalleryDirection] = useState(0);
 
   const activeColor = colors[selectedColor];
   const activeGallery = gallery.find((item) => item.id === selectedGallery) || gallery[0];
   const activePrice = activeColor.name.includes('Brass') ? BRASS_PRICE : STANDARD_PRICE;
+  const isOption1Layout = activeLayout === 'option1';
   const isOption2Layout = activeLayout === 'option2';
-  const hasLargeSwatches = isOption2Layout && layoutVariables.largeSwatches;
-  const hasIsolatedSwatches = isOption2Layout && layoutVariables.isolatedSwatches && !hasLargeSwatches;
+  const isOption3Layout = activeLayout === 'option3';
+  const isDockedRailLayout = isOption2Layout || isOption3Layout;
+  const hasOptionVariables = isOption1Layout || isDockedRailLayout;
+  const hasLargeSwatches = hasOptionVariables && layoutVariables.largeSwatches;
+  const hasIsolatedSwatches = hasOptionVariables && layoutVariables.isolatedSwatches && !hasLargeSwatches;
+  const hasBottomThumbnails = hasOptionVariables && layoutVariables.bottomThumbnails;
+  const hasRailTextBump = Boolean(layoutVariables.railTextBump);
   const shouldHideFeatures = Boolean(layoutVariables.hideFeatures);
+  const activeOption3Feature = option3FeaturePanelItems[selectedOption3Feature];
   const selectedAddOnTotal = addOns.reduce((total, item) => (
     selectedAddOns.has(item.title) ? total + item.priceValue : total
   ), 0);
@@ -1197,6 +1433,10 @@ export default function BuyCleanPage() {
       if (event.key.toLowerCase() === 'g') {
         setIsGridVisible((value) => !value);
       }
+
+      if (event.key === 'Escape') {
+        setIsOption3FeaturesOpen(false);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -1216,15 +1456,112 @@ export default function BuyCleanPage() {
   }, [isSmoothScroll]);
 
   useEffect(() => {
-    if (!isOption2Layout) {
+    window.localStorage.setItem('buyCleanMoveAccordion', String(isAccordionMoved));
+  }, [isAccordionMoved]);
+
+  useEffect(() => {
+    window.localStorage.setItem('buyCleanGreySpacer', String(isGreySpacerVisible));
+  }, [isGreySpacerVisible]);
+
+  useEffect(() => {
+    if (!isOption3Layout) {
+      setIsOption3FeaturesOpen(false);
+    }
+  }, [isOption3Layout]);
+
+  useEffect(() => {
+    if (!isOption3FeaturesOpen) {
+      return undefined;
+    }
+
+    const lockedScrollY = window.scrollY;
+    const previousOverflow = document.body.style.overflow;
+    const previousPosition = document.body.style.position;
+    const previousTop = document.body.style.top;
+    const previousWidth = document.body.style.width;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${lockedScrollY}px`;
+    document.body.style.width = '100%';
+
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousOverflow;
+      document.body.style.position = previousPosition;
+      document.body.style.top = previousTop;
+      document.body.style.width = previousWidth;
+      window.scrollTo(0, lockedScrollY);
+    };
+  }, [isOption3FeaturesOpen]);
+
+  useEffect(() => {
+    const video = option3FeatureVideoRef.current;
+
+    if (!video) {
+      return undefined;
+    }
+
+    if (!isOption3FeaturesOpen || option3PanelMode !== 'features') {
+      video.pause();
+      try {
+        video.currentTime = 0;
+      } catch {
+        // Video metadata may not be ready yet.
+      }
+      return undefined;
+    }
+
+    video.load();
+    video.pause();
+    try {
+      video.currentTime = 0;
+    } catch {
+      // Video metadata may not be ready yet.
+    }
+
+    const playTimer = window.setTimeout(() => {
+      video.play().catch(() => {});
+    }, 340);
+
+    return () => {
+      window.clearTimeout(playTimer);
+      video.pause();
+      try {
+        video.currentTime = 0;
+      } catch {
+        // Video metadata may not be ready yet.
+      }
+    };
+  }, [isOption3FeaturesOpen, option3PanelMode, selectedOption3Feature]);
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+
+    if (!video || activeGallery.type !== 'video') {
+      return;
+    }
+
+    if (isOption3FeaturesOpen) {
+      video.pause();
+      return;
+    }
+
+    video.play().catch(() => {});
+  }, [isOption3FeaturesOpen, activeGallery]);
+
+  useEffect(() => {
+    if (!isDockedRailLayout) {
       setIsOption2RailReleased(false);
     }
-  }, [isOption2Layout]);
+  }, [isDockedRailLayout]);
 
   useEffect(() => {
     const shouldSmoothPageScroll = isSmoothScroll && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (!shouldSmoothPageScroll && !isOption2Layout) {
+    if (!shouldSmoothPageScroll && !isDockedRailLayout) {
       return undefined;
     }
 
@@ -1262,7 +1599,7 @@ export default function BuyCleanPage() {
     };
 
     const updateOption2RailRelease = (railCard, effectiveRailScrollTop = null) => {
-      if (!isOption2Layout) {
+      if (!isDockedRailLayout) {
         return;
       }
 
@@ -1274,7 +1611,7 @@ export default function BuyCleanPage() {
     };
 
     const syncOption2RailRelease = () => {
-      const railCard = document.querySelector('.buy-clean-page.is-option2 .buy-clean-right-rail__card');
+      const railCard = document.querySelector('.buy-clean-page.is-docked-rail .buy-clean-right-rail__card');
       updateOption2RailRelease(railCard);
     };
 
@@ -1307,12 +1644,16 @@ export default function BuyCleanPage() {
     };
 
     const handleWheel = (event) => {
+      if (isOption3FeaturesOpen) {
+        return;
+      }
+
       if (event.ctrlKey || event.metaKey || event.defaultPrevented) {
         return;
       }
 
-      if (isOption2Layout) {
-        const railCard = document.querySelector('.buy-clean-page.is-option2 .buy-clean-right-rail__card');
+      if (isDockedRailLayout) {
+        const railCard = document.querySelector('.buy-clean-page.is-docked-rail .buy-clean-right-rail__card');
         const canScrollRail = railCard && railCard.scrollHeight > railCard.clientHeight + 1;
 
         if (canScrollRail) {
@@ -1358,6 +1699,10 @@ export default function BuyCleanPage() {
     };
 
     const handleScroll = () => {
+      if (isOption3FeaturesOpen) {
+        return;
+      }
+
       if (!animationFrame) {
         targetScroll = window.scrollY;
         currentScroll = window.scrollY;
@@ -1381,11 +1726,15 @@ export default function BuyCleanPage() {
         window.cancelAnimationFrame(railAnimationFrame);
       }
     };
-  }, [isSmoothScroll, isOption2Layout]);
+  }, [isSmoothScroll, isDockedRailLayout, isOption3FeaturesOpen]);
 
   const handleLayoutChange = (layoutKey) => {
+    const toggleDefaults = layoutToggleDefaults[layoutKey] || {};
+
     setActiveLayout(layoutKey);
     setLayoutVariables(layouts[layoutKey].variables);
+    setIsAccordionMoved(Boolean(toggleDefaults.accordionMoved));
+    setIsGreySpacerVisible(Boolean(toggleDefaults.greySpacer));
   };
 
   const moveGallery = (direction) => {
@@ -1396,6 +1745,12 @@ export default function BuyCleanPage() {
 
       return gallery[nextIndex].id;
     });
+  };
+
+  const moveOption3Feature = (direction) => {
+    setSelectedOption3Feature((currentIndex) => (
+      (currentIndex + direction + option3FeaturePanelItems.length) % option3FeaturePanelItems.length
+    ));
   };
 
   const selectGallery = (id) => {
@@ -1482,6 +1837,12 @@ export default function BuyCleanPage() {
   const jumpToReviews = (event) => {
     event.preventDefault();
 
+    if (isOption3Layout) {
+      setOption3PanelMode('reviews');
+      setIsOption3FeaturesOpen(true);
+      return;
+    }
+
     setOpenAccordions((current) => {
       const next = new Set(current);
       next.add('reviews');
@@ -1494,7 +1855,7 @@ export default function BuyCleanPage() {
   };
 
   return (
-    <main className={`buy-clean-page${isResponsive ? ' is-responsive' : ''}${isSmoothScroll ? ' is-smooth' : ''}${isOption2Layout ? ' is-option2' : ''}${isOption2RailReleased ? ' is-rail-released' : ''}${hasIsolatedSwatches ? ' is-isolated-swatches' : ''}${hasLargeSwatches ? ' is-large-swatches' : ''}${galleryDirection > 0 ? ' is-gallery-next' : ''}${galleryDirection < 0 ? ' is-gallery-prev' : ''}`} style={cssVariables}>
+    <main className={`buy-clean-page${isResponsive ? ' is-responsive' : ''}${isSmoothScroll ? ' is-smooth' : ''}${isOption1Layout ? ' is-option1' : ''}${isOption2Layout ? ' is-option2' : ''}${isOption3Layout ? ' is-option3' : ''}${isDockedRailLayout ? ' is-docked-rail' : ''}${isOption3FeaturesOpen ? ' is-feature-panel-open' : ''}${isOption2RailReleased ? ' is-rail-released' : ''}${hasIsolatedSwatches ? ' is-isolated-swatches' : ''}${hasLargeSwatches ? ' is-large-swatches' : ''}${hasBottomThumbnails ? ' is-bottom-thumbnails' : ''}${hasRailTextBump ? ' is-rail-text-bump' : ''}${galleryDirection > 0 ? ' is-gallery-next' : ''}${galleryDirection < 0 ? ' is-gallery-prev' : ''}`} style={cssVariables}>
       <GridOverlay visible={isGridVisible} />
       <section className={`buy-clean-atf-stage${isPaletteCleanseVisible ? ' has-palette-cleanse' : ''}`} aria-label="Smart Kettle Luxe buy page">
         {isPaletteCleanseVisible ? <PaletteCleanse /> : null}
@@ -1519,45 +1880,32 @@ export default function BuyCleanPage() {
         <div className="buy-clean-fold">
           <section className="buy-clean-left-rail" aria-label="Product media">
             <div className="buy-clean-arrows" aria-label="Gallery controls">
-              <button type="button" aria-label="Previous media" onClick={() => moveGallery(-1)}>
-                <span aria-hidden="true" />
-              </button>
-              <button type="button" aria-label="Next media" onClick={() => moveGallery(1)}>
-                <span aria-hidden="true" />
-              </button>
+              {hasBottomThumbnails ? (
+                <GalleryThumbs
+                  activeColor={activeColor}
+                  selectedGallery={selectedGallery}
+                  onSelectGallery={selectGallery}
+                  className="buy-clean-bottom-thumbs"
+                />
+              ) : (
+                <>
+                  <button type="button" aria-label="Previous media" onClick={() => moveGallery(-1)}>
+                    <span aria-hidden="true" />
+                  </button>
+                  <button type="button" aria-label="Next media" onClick={() => moveGallery(1)}>
+                    <span aria-hidden="true" />
+                  </button>
+                </>
+              )}
             </div>
             {hasIsolatedSwatches ? (
               <section className="buy-clean-isolated-swatches" aria-label="Color">
+                <h2>{activeColor.name}</h2>
                 <SwatchButtons selectedColor={selectedColor} onSelectColor={selectColor} />
               </section>
             ) : null}
             <div className="buy-clean-media">
-              <div className="buy-clean-thumbs" role="tablist" aria-label="Product media">
-                {gallery.map((item) => {
-                  const isSelected = selectedGallery === item.id;
-
-                  return (
-                    <button
-                      className={`buy-clean-thumb buy-clean-thumb--${item.type}${isSelected ? ' is-selected' : ''}`}
-                      type="button"
-                      role="tab"
-                      aria-selected={isSelected}
-                      aria-label={item.label}
-                      onClick={() => selectGallery(item.id)}
-                      key={item.id}
-                    >
-                      {item.type === 'video' ? (
-                        <video muted playsInline preload="metadata" aria-hidden="true">
-                          <source src={item.source} type="video/mp4" />
-                        </video>
-                      ) : (
-                        <img src={activeColor.image} alt="" />
-                      )}
-                      {item.type === 'video' ? <span className="buy-clean-thumb__play" aria-hidden="true" /> : null}
-                    </button>
-                  );
-                })}
-              </div>
+              <GalleryThumbs activeColor={activeColor} selectedGallery={selectedGallery} onSelectGallery={selectGallery} />
 
               <figure
                 className={`buy-clean-hero${activeGallery.type === 'video' ? ` buy-clean-hero--video buy-clean-hero--${activeGallery.aspect}` : ''}`}
@@ -1567,7 +1915,7 @@ export default function BuyCleanPage() {
                 onPointerCancel={handleHeroPointerCancel}
               >
                 {activeGallery.type === 'video' ? (
-                  <video className={`buy-clean-hero__video buy-clean-hero__video--${activeGallery.aspect}`} autoPlay muted loop playsInline key={activeGallery.id}>
+                  <video ref={heroVideoRef} className={`buy-clean-hero__video buy-clean-hero__video--${activeGallery.aspect}`} autoPlay muted loop playsInline key={activeGallery.id}>
                     <source src={activeGallery.source} type="video/mp4" />
                   </video>
                 ) : (
@@ -1583,6 +1931,7 @@ export default function BuyCleanPage() {
               <div className="buy-clean-product-head">
                 <a href="/" className="buy-clean-category">Kettles</a>
                 <h1>the Smart Kettle<sup>TM</sup> Luxe</h1>
+                {hasIsolatedSwatches ? <p className="buy-clean-product-model">Model: {activeColor.model}</p> : null}
                 <div className="buy-clean-rating">
                   <span>4.5</span>
                   <StarRow />
@@ -1592,7 +1941,7 @@ export default function BuyCleanPage() {
                   <strong>{formatPrice(activePrice)}</strong>
                   <span>Free Shipping</span>
                 </div>
-                {!isOption2Layout ? (
+                {!isDockedRailLayout ? (
                   <div className="buy-clean-price-row">
                     <strong>{formatPrice(activePrice)}</strong>
                     <span>Free Shipping</span>
@@ -1600,18 +1949,63 @@ export default function BuyCleanPage() {
                 ) : null}
               </div>
 
-              <section className="buy-clean-color-picker" aria-label="Color">
-                <h2>{activeColor.name}</h2>
-                <p>Model: {activeColor.model}</p>
+              {isOption3Layout ? (
+                <section className={`buy-clean-color-picker${hasIsolatedSwatches ? ' is-isolated' : ''}`} aria-label="Color">
+                  {!hasIsolatedSwatches ? (
+                    <>
+                      <h2>{activeColor.name}</h2>
+                      <p>Model: {activeColor.model}</p>
+                    </>
+                  ) : null}
+                  {!hasIsolatedSwatches ? (
+                    <SwatchButtons selectedColor={selectedColor} onSelectColor={selectColor} />
+                  ) : null}
+                  {hasIsolatedSwatches ? (
+                    <div className="buy-clean-color-picker__mobile-swatches">
+                      <h2>{activeColor.name}</h2>
+                      <SwatchButtons selectedColor={selectedColor} onSelectColor={selectColor} />
+                    </div>
+                  ) : null}
+                </section>
+              ) : null}
+
+              <section className="buy-clean-option3-copy" aria-label="Product description">
+                <p>
+                  This 7 cup capacity smart kettle knows the ideal temperature to bring out optimal taste and quality of your favorite tea or coffee.
+                  5 temperature settings to brew Black, Green, White, Oolong Tea and French press coffee. Also features a soft opening lid to gently
+                  release hot steam and prevent hot water splash back.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOption3PanelMode('features');
+                    setIsOption3FeaturesOpen(true);
+                  }}
+                >
+                  Explore features
+                  <span aria-hidden="true" />
+                </button>
+              </section>
+
+              {!isOption3Layout ? (
+                <section className={`buy-clean-color-picker${hasIsolatedSwatches ? ' is-isolated' : ''}`} aria-label="Color">
+                {!hasIsolatedSwatches ? (
+                  <>
+                    <h2>{activeColor.name}</h2>
+                    <p>Model: {activeColor.model}</p>
+                  </>
+                ) : null}
                 {!hasIsolatedSwatches ? (
                   <SwatchButtons selectedColor={selectedColor} onSelectColor={selectColor} />
                 ) : null}
                 {hasIsolatedSwatches ? (
                   <div className="buy-clean-color-picker__mobile-swatches">
+                    <h2>{activeColor.name}</h2>
                     <SwatchButtons selectedColor={selectedColor} onSelectColor={selectColor} />
                   </div>
                 ) : null}
-              </section>
+                </section>
+              ) : null}
 
               <section className="buy-clean-cart-row" aria-label="Add to cart">
                 <div className="buy-clean-quantity">
@@ -1665,9 +2059,17 @@ export default function BuyCleanPage() {
                   );
                 })}
               </section>
+              {isAccordionMoved && isOption3Layout ? (
+                <Option3RailAccordions openAccordions={openAccordions} onToggleAccordion={toggleAccordion} />
+              ) : null}
+              {isAccordionMoved && !isOption3Layout ? (
+                <div className="buy-clean-rail-accordions">
+                  <ExpandedAccordions openAccordions={openAccordions} onToggleAccordion={toggleAccordion} reviewsRef={reviewsRef} hideReviews={isOption3Layout} isRail />
+                </div>
+              ) : null}
               <div className="buy-clean-rail-spacer" aria-hidden="true" />
             </div>
-            {isOption2Layout ? (
+            {isDockedRailLayout ? (
               <PurchaseDock
                 cartTotal={cartTotal}
                 quantity={quantity}
@@ -1680,9 +2082,47 @@ export default function BuyCleanPage() {
         </section>
       </section>
 
-      {!shouldHideFeatures ? <FeatureHighlights /> : null}
-      <ExpandedAccordions openAccordions={openAccordions} onToggleAccordion={toggleAccordion} reviewsRef={reviewsRef} />
+      {isGreySpacerVisible ? <div className="buy-clean-grey-spacer" aria-hidden="true" /> : null}
+      {!shouldHideFeatures ? <FeatureHighlights useVideos={isOption2Layout} /> : null}
+      {!isAccordionMoved ? (
+        <ExpandedAccordions openAccordions={openAccordions} onToggleAccordion={toggleAccordion} reviewsRef={reviewsRef} hideReviews={isOption3Layout} />
+      ) : null}
       <ProductCarousels />
+
+      <div className="buy-clean-feature-panel" aria-hidden={!isOption3FeaturesOpen}>
+        <button className="buy-clean-feature-panel__scrim" type="button" aria-label="Close feature panel" onClick={() => setIsOption3FeaturesOpen(false)} />
+        <aside className={`buy-clean-feature-panel__drawer buy-clean-feature-panel__drawer--${option3PanelMode}`} aria-label={option3PanelMode === 'reviews' ? 'Customer reviews' : 'Product features'}>
+          <header>
+            <h2>{option3PanelMode === 'reviews' ? 'Customer Reviews' : 'Feature Highlights'}</h2>
+            <button className="buy-clean-feature-panel__close" type="button" aria-label="Close feature panel" onClick={() => setIsOption3FeaturesOpen(false)}>
+              <span aria-hidden="true" />
+            </button>
+          </header>
+          {option3PanelMode === 'reviews' ? (
+            <CustomerReviewsPanel />
+          ) : (
+            <>
+              <figure>
+                <video ref={option3FeatureVideoRef} muted playsInline preload="metadata" key={activeOption3Feature.video}>
+                  <source src={activeOption3Feature.video} type="video/mp4" />
+                </video>
+              </figure>
+              <article>
+                <h3>{activeOption3Feature.title}</h3>
+                <p>{activeOption3Feature.copy}</p>
+              </article>
+              <div className="buy-clean-feature-panel__arrows" aria-label="Feature controls">
+                <button type="button" aria-label="Previous feature" onClick={() => moveOption3Feature(-1)}>
+                  <span aria-hidden="true" />
+                </button>
+                <button type="button" aria-label="Next feature" onClick={() => moveOption3Feature(1)}>
+                  <span aria-hidden="true" />
+                </button>
+              </div>
+            </>
+          )}
+        </aside>
+      </div>
 
       <DebugPanel
         activeLayout={activeLayout}
@@ -1695,8 +2135,13 @@ export default function BuyCleanPage() {
         onPaletteCleanseChange={setIsPaletteCleanseVisible}
         isSmoothScroll={isSmoothScroll}
         onSmoothScrollChange={setIsSmoothScroll}
+        isAccordionMoved={isAccordionMoved}
+        onAccordionMovedChange={setIsAccordionMoved}
+        isGreySpacerVisible={isGreySpacerVisible}
+        onGreySpacerChange={setIsGreySpacerVisible}
         isOpen={isDebugOpen}
       />
     </main>
   );
 }
+
