@@ -270,6 +270,7 @@ const layouts = {
       railTextBump: false,
       flipAtc: false,
       stepAtc: false,
+      cardCart: true,
     },
   },
   option1: {
@@ -286,6 +287,7 @@ const layouts = {
       railTextBump: false,
       flipAtc: false,
       stepAtc: false,
+      cardCart: true,
     },
   },
   option2: {
@@ -318,6 +320,7 @@ const layouts = {
       railTextBump: false,
       flipAtc: false,
       stepAtc: false,
+      cardCart: true,
     },
   },
 };
@@ -1362,7 +1365,7 @@ function FeatureHighlightsAlt() {
   );
 }
 
-function ProductCarouselCard({ product }) {
+function ProductCarouselCard({ product, showCardCart }) {
   const [selectedOption, setSelectedOption] = useState(0);
   const activeOption = product.options?.[selectedOption];
   const price = activeOption?.price || product.price;
@@ -1393,15 +1396,17 @@ function ProductCarouselCard({ product }) {
           {product.subtitle ? <em>{product.subtitle}</em> : null}
           <span>{price}</span>
         </div>
-        <button type="button" aria-label={`Add ${product.title} to cart`}>
-          <img src={`${HEADER_ASSET_ROOT}/cart.svg`} alt="" />
-        </button>
+        {showCardCart ? (
+          <button type="button" aria-label={`Add ${product.title} to cart`}>
+            <img src={`${HEADER_ASSET_ROOT}/cart.svg`} alt="" />
+          </button>
+        ) : null}
       </div>
     </article>
   );
 }
 
-function ProductCarouselSection({ section }) {
+function ProductCarouselSection({ section, showCardCart }) {
   const viewportRef = useRef(null);
   const carouselDragRef = useRef(null);
   const suppressCarouselClickRef = useRef(false);
@@ -1612,7 +1617,7 @@ function ProductCarouselSection({ section }) {
       <div className="buy-clean-carousel__viewport" ref={viewportRef} {...carouselDragHandlers}>
         <div className="buy-clean-carousel__track">
           {section.products.map((product) => (
-            <ProductCarouselCard product={product} key={product.title} />
+            <ProductCarouselCard product={product} showCardCart={showCardCart} key={product.title} />
           ))}
         </div>
       </div>
@@ -1620,11 +1625,11 @@ function ProductCarouselSection({ section }) {
   );
 }
 
-function ProductCarousels({ onCompareOpen }) {
+function ProductCarousels({ onCompareOpen, showCardCart }) {
   return (
     <section className="buy-clean-carousels" aria-label="Related products">
       {carouselSections.map((section) => (
-        <ProductCarouselSection section={section} key={section.title} />
+        <ProductCarouselSection section={section} showCardCart={showCardCart} key={section.title} />
       ))}
       <div className="buy-clean-carousels__compare">
         <button type="button" onClick={onCompareOpen}>Compare Kettles</button>
@@ -1747,8 +1752,11 @@ function StickyAtcRow({ cartTotal }) {
       <strong>the Smart Kettle<sup>TM</sup> Luxe</strong>
       <div>
         <span>{cartTotal}</span>
-        <button className="buy-clean-add" type="button">
+        <button className="buy-clean-add buy-clean-sticky-atc__desktop-button" type="button">
           <span>Add to cart</span>
+        </button>
+        <button className="buy-clean-add buy-clean-sticky-atc__mobile-button" type="button">
+          <span>Add to cart - {cartTotal}</span>
         </button>
       </div>
     </section>
@@ -1920,6 +1928,7 @@ function DebugPanel({
     bottomThumbnails: 'Bottom thumbnails',
     railTextBump: 'Rail text bump',
     flipAtc: 'Flip ATC',
+    cardCart: 'Card cart',
   };
 
   return (
@@ -2094,6 +2103,7 @@ export default function BuyCleanPage() {
   const hasRailTextBump = Boolean(layoutVariables.railTextBump);
   const hasFlippedAtc = Boolean(layoutVariables.flipAtc);
   const hasStepAtc = Boolean(layoutVariables.stepAtc);
+  const hasCardCart = layoutVariables.cardCart !== false;
   const shouldHideFeatures = Boolean(layoutVariables.hideFeatures);
   const activeOption3Feature = option3FeaturePanelItems[selectedOption3Feature];
   const selectedAddOnTotal = addOns.reduce((total, item) => (
@@ -2139,7 +2149,7 @@ export default function BuyCleanPage() {
   }, []);
 
   useEffect(() => {
-    if (!isOption3Layout) {
+    if (!isOption2Layout && !isOption3Layout) {
       setHasATFLeftViewport(false);
       return undefined;
     }
@@ -2174,7 +2184,7 @@ export default function BuyCleanPage() {
         window.cancelAnimationFrame(animationFrame);
       }
     };
-  }, [isOption3Layout]);
+  }, [isOption2Layout, isOption3Layout]);
 
   useEffect(() => {
     window.localStorage.setItem('buyCleanResponsive', String(isResponsive));
@@ -2963,7 +2973,7 @@ export default function BuyCleanPage() {
           isFaqCollapsedBeforeReviews={isOption2Layout}
         />
       ) : null}
-      <ProductCarousels onCompareOpen={() => setIsCompareOpen(true)} />
+      <ProductCarousels onCompareOpen={() => setIsCompareOpen(true)} showCardCart={hasCardCart} />
       <section className="motion-footer-section buy-clean-footer-section" aria-label="Footer">
         <TestingFooter variant="reversed" linkHref={UPDATE_3_PATH} />
       </section>
@@ -3027,7 +3037,7 @@ export default function BuyCleanPage() {
         onLayoutChange={handleLayoutChange}
         isOpen={isLayoutPanelOpen}
       />
-      {isOption3Layout ? <StickyAtcRow cartTotal={cartTotal} /> : null}
+      {(isOption2Layout || isOption3Layout) ? <StickyAtcRow cartTotal={cartTotal} /> : null}
     </main>
     {isCompareOpen ? <CompareTakeover onClose={() => setIsCompareOpen(false)} /> : null}
     </>

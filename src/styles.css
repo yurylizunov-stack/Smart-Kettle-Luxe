@@ -1498,16 +1498,15 @@ body {
     transform 420ms var(--sticky-panel-ease);
 }
 
+.buy-clean-page.is-option2.is-atf-past .buy-clean-sticky-atc,
 .buy-clean-page.is-option3.is-atf-past .buy-clean-sticky-atc {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
 }
 
-@media (max-width: 767px) {
-  .buy-clean-sticky-atc {
-    display: none;
-  }
+.buy-clean-sticky-atc__mobile-button {
+  display: none;
 }
 
 .buy-clean-sticky-atc strong,
@@ -1548,7 +1547,7 @@ body {
   white-space: nowrap;
 }
 
-.buy-clean-sticky-atc .buy-clean-add {
+.buy-clean-sticky-atc .buy-clean-sticky-atc__desktop-button {
   width: 149px;
   min-width: 149px;
   flex: 0 0 149px;
@@ -1560,6 +1559,50 @@ body {
   color: #ffffff;
   font-size: 16px;
   line-height: 24px;
+}
+
+@media (max-width: 767px) {
+  .buy-clean-sticky-atc {
+    height: 80px;
+    justify-content: center;
+    gap: 0;
+    padding: 0 20px;
+    background: #efefef;
+  }
+
+  .buy-clean-sticky-atc > strong,
+  .buy-clean-sticky-atc > div > span {
+    display: none;
+  }
+
+  .buy-clean-sticky-atc > div {
+    width: 100%;
+    height: 80px;
+    justify-content: center;
+  }
+
+  .buy-clean-sticky-atc .buy-clean-sticky-atc__desktop-button {
+    display: none;
+  }
+
+  .buy-clean-sticky-atc .buy-clean-sticky-atc__mobile-button {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+    flex: 1 1 auto;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0 24px;
+  }
+
+  .buy-clean-sticky-atc .buy-clean-sticky-atc__mobile-button span {
+    display: inline;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+  }
 }
 
 .buy-clean-step-atc {
