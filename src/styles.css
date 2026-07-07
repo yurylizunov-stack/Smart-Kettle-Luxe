@@ -2716,6 +2716,11 @@ body {
   margin: 0;
 }
 
+.buy-clean-accordion__included-media {
+  display: block;
+  width: 210px;
+}
+
 .buy-clean-accordion__included-item img {
   display: block;
   width: 210px;
@@ -4872,7 +4877,7 @@ body {
     padding: 0 var(--buy-clean-mobile-gutter);
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
+    touch-action: pan-y;
   }
 
   .buy-clean-page.is-responsive .buy-clean-swatches::-webkit-scrollbar {
@@ -5305,6 +5310,10 @@ body {
     width: 290px;
     flex: 0 0 290px;
     gap: 12px;
+  }
+
+  .buy-clean-page.is-responsive .buy-clean-accordion__included-media {
+    width: 100%;
   }
 
   .buy-clean-page.is-responsive .buy-clean-accordion__included-item img {

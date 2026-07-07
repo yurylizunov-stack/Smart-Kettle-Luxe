@@ -17,7 +17,7 @@ const BRASS_PRICE = 249.95;
 const MAX_QUANTITY = 3;
 const UPDATE_3_PATH = '/update-3';
 
-function useDragScrollHandlers(viewportRef) {
+function useDragScrollHandlers(viewportRef, { allowTouch = false } = {}) {
   const dragRef = useRef(null);
   const suppressClickRef = useRef(false);
 
@@ -51,7 +51,7 @@ function useDragScrollHandlers(viewportRef) {
       if (
         !viewport
         || event.isPrimary === false
-        || event.pointerType === 'touch'
+        || (!allowTouch && event.pointerType === 'touch')
         || (event.pointerType === 'mouse' && event.button !== 0)
       ) {
         return;
@@ -442,8 +442,16 @@ const railTechnicalSpecColumns = [
 
 const includedAccordionItems = [
   { title: 'Kettle Body', image: `${ACCORDION_ASSET_ROOT}/included-kettle-body.png` },
-  { title: 'Kettle Base', image: `${ACCORDION_ASSET_ROOT}/included-kettle-base.png` },
-  { title: 'Manual and Warranty Card', image: `${ACCORDION_ASSET_ROOT}/included-manual-card.png` },
+  {
+    title: 'Kettle Base',
+    image: `${ACCORDION_ASSET_ROOT}/included-kettle-base.png`,
+    mobileImage: `${ACCORDION_ASSET_ROOT}/included-kettle-base-mobile.png`,
+  },
+  {
+    title: 'Manual and Warranty Card',
+    image: `${ACCORDION_ASSET_ROOT}/included-manual-card.png`,
+    mobileImage: `${ACCORDION_ASSET_ROOT}/included-manual-card-mobile.png`,
+  },
 ];
 
 const supportRailItems = ['Product Hub', 'Instruction Manual', 'Return Policies'];
@@ -909,7 +917,10 @@ function IncludedAccordion({ isOpen, onToggle }) {
         <div className="buy-clean-accordion__included-grid" ref={viewportRef} {...includedDragHandlers}>
           {includedAccordionItems.map((item, index) => (
             <article className="buy-clean-accordion__included-item" key={`${item.title}-${index}`}>
-              <img src={item.image} alt="" />
+              <picture className="buy-clean-accordion__included-media">
+                {item.mobileImage ? <source media="(max-width: 767px)" srcSet={item.mobileImage} /> : null}
+                <img src={item.image} alt="" />
+              </picture>
               <p>{item.title}</p>
             </article>
           ))}
@@ -1794,6 +1805,7 @@ function WarrantyOptions({ selectedWarranty, onSelectWarranty }) {
 
 function SwatchButtons({ selectedColor, onSelectColor }) {
   const viewportRef = useRef(null);
+  const dragHandlers = useDragScrollHandlers(viewportRef, { allowTouch: true });
   const swatchTapRef = useRef(null);
 
   const handleSwatchPointerDown = (event, index) => {
@@ -1830,7 +1842,7 @@ function SwatchButtons({ selectedColor, onSelectColor }) {
   };
 
   return (
-    <div className="buy-clean-swatches" ref={viewportRef}>
+    <div className="buy-clean-swatches" ref={viewportRef} {...dragHandlers}>
       {colors.map((option, index) => (
         <button
           className={index === selectedColor ? 'is-selected' : ''}
@@ -2077,6 +2089,7 @@ export default function BuyCleanPage() {
     const storedResponsive = window.localStorage.getItem('buyCleanResponsive');
     return window.matchMedia('(max-width: 767px)').matches || storedResponsive === 'true';
   });
+  const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
   const [isPaletteCleanseVisible, setIsPaletteCleanseVisible] = useState(() => window.localStorage.getItem('buyCleanPaletteCleanse') !== 'false');
   const [isSmoothScroll, setIsSmoothScroll] = useState(true);
   const [isAccordionMoved, setIsAccordionMoved] = useState(false);
@@ -2117,6 +2130,30 @@ export default function BuyCleanPage() {
     '--buy-clean-rail-gap': `${layoutVariables.railGap}px`,
     '--buy-clean-swatch-gap': `${layoutVariables.swatchGap}px`,
   }), [layoutVariables]);
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia('(max-width: 767px)');
+    const updateMobileViewport = () => setIsMobileViewport(mobileQuery.matches);
+
+    updateMobileViewport();
+    mobileQuery.addEventListener?.('change', updateMobileViewport);
+
+    return () => {
+      mobileQuery.removeEventListener?.('change', updateMobileViewport);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isMobileViewport || activeLayout === 'option2') {
+      return;
+    }
+
+    setActiveLayout('option2');
+    setLayoutVariables(layouts.option2.variables);
+    setIsAccordionMoved(false);
+    setIsGreySpacerVisible(false);
+    setIsOption3FeaturesOpen(false);
+  }, [activeLayout, isMobileViewport]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
