@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { CompareTakeover } from './StickyNavBlankPage.jsx';
+import { TestingFooter } from './testing/MotionSupport.jsx';
 
 const PRODUCT_IMAGE_ROOT = '/assets/images/kettle_straight/web_p';
 const SWATCH_ROOT = '/assets/images/swatches';
@@ -13,6 +15,249 @@ const VIDEO_ASSET_ROOT = '/assets/videos';
 const STANDARD_PRICE = 219.95;
 const BRASS_PRICE = 249.95;
 const MAX_QUANTITY = 3;
+const UPDATE_3_PATH = '/update-3';
+
+function useDragScrollHandlers(viewportRef) {
+  const dragRef = useRef(null);
+  const suppressClickRef = useRef(false);
+
+  const stopDragging = (event) => {
+    const viewport = viewportRef.current;
+    const dragState = dragRef.current;
+
+    if (!viewport || !dragState) {
+      return;
+    }
+
+    if (event?.pointerId !== undefined && viewport.hasPointerCapture?.(event.pointerId)) {
+      viewport.releasePointerCapture(event.pointerId);
+    }
+
+    viewport.classList.remove('is-dragging');
+    suppressClickRef.current = dragState.didDrag;
+    dragRef.current = null;
+
+    if (dragState.didDrag) {
+      window.setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
+    }
+  };
+
+  return {
+    onPointerDown: (event) => {
+      const viewport = viewportRef.current;
+
+      if (
+        !viewport
+        || event.isPrimary === false
+        || event.pointerType === 'touch'
+        || (event.pointerType === 'mouse' && event.button !== 0)
+      ) {
+        return;
+      }
+
+      if (viewport.scrollWidth <= viewport.clientWidth + 1) {
+        return;
+      }
+
+      dragRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        scrollLeft: viewport.scrollLeft,
+        didDrag: false,
+      };
+      viewport.setPointerCapture?.(event.pointerId);
+    },
+    onPointerMove: (event) => {
+      const viewport = viewportRef.current;
+      const dragState = dragRef.current;
+
+      if (!viewport || !dragState || dragState.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const deltaX = event.clientX - dragState.startX;
+      const deltaY = event.clientY - dragState.startY;
+
+      if (!dragState.didDrag) {
+        if (Math.abs(deltaY) > 8 && Math.abs(deltaY) > Math.abs(deltaX)) {
+          stopDragging(event);
+          return;
+        }
+
+        if (Math.abs(deltaX) < 6) {
+          return;
+        }
+
+        dragState.didDrag = true;
+        viewport.classList.add('is-dragging');
+      }
+
+      event.preventDefault();
+      viewport.scrollLeft = dragState.scrollLeft - deltaX;
+    },
+    onPointerUp: stopDragging,
+    onPointerCancel: stopDragging,
+    onLostPointerCapture: stopDragging,
+    onClickCapture: (event) => {
+      if (!suppressClickRef.current) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      suppressClickRef.current = false;
+    },
+  };
+}
+
+function useSnapCarouselHandlers(viewportRef, itemSelector, itemCount) {
+  const dragRef = useRef(null);
+  const suppressClickRef = useRef(false);
+
+  const getMetrics = () => {
+    const viewport = viewportRef.current;
+
+    if (!viewport) {
+      return { step: 0, maxIndex: 0 };
+    }
+
+    const firstCard = viewport.querySelector(itemSelector);
+    const track = firstCard?.parentElement || viewport;
+    const gap = track ? parseFloat(window.getComputedStyle(track).columnGap) || 0 : 0;
+    const cardWidth = firstCard?.getBoundingClientRect().width || viewport.clientWidth;
+
+    return {
+      step: cardWidth + gap,
+      maxIndex: Math.max(0, itemCount - 1),
+    };
+  };
+
+  const snapToIndex = (index) => {
+    const viewport = viewportRef.current;
+    const { step, maxIndex } = getMetrics();
+
+    if (!viewport || !step) {
+      return;
+    }
+
+    const targetIndex = Math.min(maxIndex, Math.max(0, index));
+
+    viewport.scrollTo({
+      left: targetIndex * step,
+      behavior: 'smooth',
+    });
+  };
+
+  const stopDrag = (event) => {
+    const viewport = viewportRef.current;
+    const dragState = dragRef.current;
+
+    if (!viewport || !dragState) {
+      return;
+    }
+
+    if (event?.pointerId !== undefined && viewport.hasPointerCapture?.(event.pointerId)) {
+      viewport.releasePointerCapture(event.pointerId);
+    }
+
+    viewport.classList.remove('is-dragging');
+    dragRef.current = null;
+
+    if (!dragState.didDrag) {
+      return;
+    }
+
+    const { step } = getMetrics();
+    const releaseDelta = (event?.clientX ?? dragState.lastX ?? dragState.startX) - dragState.startX;
+    const threshold = step ? Math.min(80, step * 0.18) : 48;
+    let nextIndex = Math.round(viewport.scrollLeft / Math.max(step, 1));
+
+    if (Math.abs(releaseDelta) >= threshold) {
+      nextIndex = dragState.startIndex + (releaseDelta < 0 ? 1 : -1);
+    }
+
+    suppressClickRef.current = true;
+    snapToIndex(nextIndex);
+    window.setTimeout(() => {
+      suppressClickRef.current = false;
+    }, 0);
+  };
+
+  const handlers = {
+    onPointerDown: (event) => {
+      const viewport = viewportRef.current;
+
+      if (
+        !viewport
+        || event.isPrimary === false
+        || (event.pointerType === 'mouse' && event.button !== 0)
+        || viewport.scrollWidth <= viewport.clientWidth + 1
+      ) {
+        return;
+      }
+
+      const { step } = getMetrics();
+
+      dragRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        lastX: event.clientX,
+        scrollLeft: viewport.scrollLeft,
+        startIndex: step ? Math.round(viewport.scrollLeft / step) : 0,
+        didDrag: false,
+      };
+      viewport.setPointerCapture?.(event.pointerId);
+    },
+    onPointerMove: (event) => {
+      const viewport = viewportRef.current;
+      const dragState = dragRef.current;
+
+      if (!viewport || !dragState || dragState.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const deltaX = event.clientX - dragState.startX;
+      const deltaY = event.clientY - dragState.startY;
+
+      dragState.lastX = event.clientX;
+
+      if (!dragState.didDrag) {
+        if (Math.abs(deltaY) > 8 && Math.abs(deltaY) > Math.abs(deltaX)) {
+          stopDrag(event);
+          return;
+        }
+
+        if (Math.abs(deltaX) < 6) {
+          return;
+        }
+
+        dragState.didDrag = true;
+        viewport.classList.add('is-dragging');
+      }
+
+      event.preventDefault();
+      viewport.scrollLeft = dragState.scrollLeft - deltaX;
+    },
+    onPointerUp: stopDrag,
+    onPointerCancel: stopDrag,
+    onLostPointerCapture: stopDrag,
+    onClickCapture: (event) => {
+      if (!suppressClickRef.current) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      suppressClickRef.current = false;
+    },
+  };
+
+  return { handlers, snapToIndex, getMetrics };
+}
 
 const layouts = {
   atfExact: {
@@ -20,9 +265,11 @@ const layouts = {
     variables: {
       heroScale: 1.36,
       railInset: 24,
-      railGap: 48,
+      railGap: 64,
       swatchGap: 8,
       railTextBump: false,
+      flipAtc: false,
+      stepAtc: false,
     },
   },
   option1: {
@@ -30,44 +277,52 @@ const layouts = {
     variables: {
       heroScale: 1.36,
       railInset: 24,
-      railGap: 48,
+      railGap: 64,
       swatchGap: 8,
       isolatedSwatches: false,
       largeSwatches: false,
       hideFeatures: false,
       bottomThumbnails: false,
       railTextBump: false,
+      flipAtc: false,
+      stepAtc: false,
     },
   },
   option2: {
-    label: 'Option 2',
+    label: 'V1',
     variables: {
       heroScale: 1.36,
       railInset: 24,
-      railGap: 48,
+      railGap: 64,
       swatchGap: 8,
       isolatedSwatches: false,
       largeSwatches: false,
       hideFeatures: false,
       bottomThumbnails: false,
       railTextBump: false,
+      flipAtc: false,
+      stepAtc: false,
     },
   },
   option3: {
-    label: 'Option 3',
+    label: 'v2',
     variables: {
       heroScale: 1.36,
       railInset: 24,
-      railGap: 48,
+      railGap: 64,
       swatchGap: 8,
       isolatedSwatches: false,
       largeSwatches: false,
       hideFeatures: true,
       bottomThumbnails: false,
       railTextBump: false,
+      flipAtc: false,
+      stepAtc: false,
     },
   },
 };
+
+const debugLayoutKeys = ['option2', 'option3'];
 
 const globalVariables = {
   artboardWidth: 1440,
@@ -192,16 +447,36 @@ const supportRailItems = ['Product Hub', 'Instruction Manual', 'Return Policies'
 
 const faqItems = [
   {
-    question: 'Can I hold a selected temperature?',
-    answer: 'Yes. The keep warm control holds water temperature for repeat pours.',
+    question: 'What temperature settings are included?',
+    answer: 'The kettle includes five one-touch presets for Green Tea, Oolong, French Press, Black Herbal, and Boil, so you can heat water to the right range for each drink.',
   },
   {
-    question: 'Can I hold a selected temperature?',
-    answer: 'Yes. The keep warm control holds water temperature for repeat pours.',
+    question: 'How long does Keep Warm hold the water temperature?',
+    answer: 'The Keep Warm button maintains the selected temperature for up to 20 minutes and can be activated before, during, or after the heating cycle.',
   },
   {
-    question: 'Can I hold a selected temperature?',
-    answer: 'Yes. The keep warm control holds water temperature for repeat pours.',
+    question: 'What is the kettle capacity?',
+    answer: 'The Smart Kettle Luxe has a 7 cup capacity, with dual water windows that make it easy to fill only what you need.',
+  },
+  {
+    question: 'Does the lid open slowly?',
+    answer: 'Yes. The soft opening lid is designed to release steam gradually and help reduce hot water splash back after boiling.',
+  },
+  {
+    question: 'Are the materials BPA free?',
+    answer: 'The parts that come into contact with water are made from BPA free materials.',
+  },
+  {
+    question: 'How should I clean or descale it?',
+    answer: 'Wipe the exterior with a soft damp cloth and descale regularly based on your water hardness. Use a kettle-safe descaler and follow the instruction manual for the correct cycle.',
+  },
+  {
+    question: 'Is the base cordless?',
+    answer: 'Yes. The kettle lifts off the powered base for cordless pouring, then returns to the base for heating.',
+  },
+  {
+    question: 'What warranty is included?',
+    answer: 'A 1-year protection plan is included with purchase, with an optional upgrade available in the buy flow.',
   },
 ];
 
@@ -391,7 +666,6 @@ const carouselSections = [
       },
       {
         title: 'Base Cord Assembly',
-        subtitle: 'Brushed Stainless Steel',
         price: '$49.95',
         image: `${CAROUSEL_ASSET_ROOT}/base-cord-assembly.png`,
       },
@@ -412,7 +686,7 @@ const carouselSections = [
     ],
   },
   {
-    title: 'You may also like',
+    title: 'You May Also Like',
     products: [
       {
         title: 'the IQ Kettle\u2122',
@@ -500,8 +774,11 @@ function ReviewListItem({ review }) {
     <article className="buy-clean-customer-review" key={`${review.author}-${review.title}`}>
       <div className="buy-clean-customer-review__detail">
         <aside className="buy-clean-customer-review__author">
-          <strong>{review.author}</strong>
-          <span>{review.date}</span>
+          <div className="buy-clean-customer-review__author-row">
+            <strong>{review.author}</strong>
+            {review.freeProduct ? <span className="buy-clean-customer-review__free-mobile">Received Free Product</span> : null}
+          </div>
+          <span className="buy-clean-customer-review__date-desktop">{review.date}</span>
           {review.location ? <em>{review.location}</em> : null}
           <dl>
             <div>
@@ -518,7 +795,8 @@ function ReviewListItem({ review }) {
         <div className="buy-clean-customer-review__body">
           <div className="buy-clean-customer-review__meta">
             <ReviewCardStars rating={review.rating} />
-            {review.freeProduct ? <span>Received Free Product</span> : null}
+            {review.freeProduct ? <span className="buy-clean-customer-review__free-desktop">Received Free Product</span> : null}
+            <span className="buy-clean-customer-review__date-mobile">{review.date}</span>
           </div>
           <h3>{review.title}</h3>
           <p>{review.copy}</p>
@@ -531,7 +809,7 @@ function ReviewListItem({ review }) {
               ))}
             </div>
           ) : null}
-          <footer className={review.recommend ? 'is-recommended' : 'is-not-recommended'}>
+          <footer className={`buy-clean-customer-review__recommendation${review.recommend ? ' is-recommended' : ' is-not-recommended'}`}>
             <span aria-hidden="true" />
             <p>{review.recommend ? 'Yes, I recommend this product.' : 'No, I do not recommend this product.'}</p>
           </footer>
@@ -614,11 +892,18 @@ function TechnicalSpecifications({ isOpen, onToggle, isRail = false }) {
 }
 
 function IncludedAccordion({ isOpen, onToggle }) {
+  const viewportRef = useRef(null);
+  const { handlers: includedDragHandlers } = useSnapCarouselHandlers(
+    viewportRef,
+    '.buy-clean-accordion__included-item',
+    includedAccordionItems.length,
+  );
+
   return (
     <section className={`buy-clean-accordion${isOpen ? ' is-open' : ''}`} aria-label="What's Included">
       <AccordionHeader title="What's Included" isOpen={isOpen} onToggle={onToggle} />
       {isOpen ? (
-        <div className="buy-clean-accordion__included-grid">
+        <div className="buy-clean-accordion__included-grid" ref={viewportRef} {...includedDragHandlers}>
           {includedAccordionItems.map((item, index) => (
             <article className="buy-clean-accordion__included-item" key={`${item.title}-${index}`}>
               <img src={item.image} alt="" />
@@ -632,6 +917,13 @@ function IncludedAccordion({ isOpen, onToggle }) {
 }
 
 function SupportAccordion({ isOpen, onToggle, isRail = false }) {
+  const viewportRef = useRef(null);
+  const { handlers: supportDragHandlers } = useSnapCarouselHandlers(
+    viewportRef,
+    '.buy-clean-support-card--small',
+    2,
+  );
+
   return (
     <section className={`buy-clean-accordion${isOpen ? ' is-open' : ''}`} aria-label="Support & Documentation">
       <AccordionHeader title="Support & Documentation" isOpen={isOpen} onToggle={onToggle} />
@@ -655,7 +947,7 @@ function SupportAccordion({ isOpen, onToggle, isRail = false }) {
               </span>
               <img className="buy-clean-support-card__arrow" src={`${ACCORDION_ASSET_ROOT}/support-arrow-right.svg`} alt="" aria-hidden="true" />
             </article>
-            <div className="buy-clean-accordion__support-stack">
+            <div className="buy-clean-accordion__support-stack" ref={viewportRef} {...supportDragHandlers}>
               <article className="buy-clean-support-card buy-clean-support-card--small" aria-label="Instruction Manual">
                 <span>
                   <strong>Instruction<br />Manual</strong>
@@ -678,71 +970,109 @@ function SupportAccordion({ isOpen, onToggle, isRail = false }) {
   );
 }
 
-function Option3RailAccordionHeader({ title, isOpen, onToggle }) {
+function Option3RailAccordionHeader({ title, onToggle }) {
   return (
-    <button className="buy-clean-option3-rail-accordion__header" type="button" aria-expanded={isOpen} onClick={onToggle}>
+    <button className="buy-clean-option3-rail-accordion__header" type="button" aria-haspopup="dialog" onClick={onToggle}>
       <span>{title}</span>
-      <i className={isOpen ? 'is-open' : ''} aria-hidden="true" />
+      <i aria-hidden="true" />
     </button>
   );
 }
 
-function Option3RailAccordions({ openAccordions, onToggleAccordion }) {
+function Option3RailAccordions({ onOpenPanel }) {
   return (
     <section className="buy-clean-option3-rail-accordions" aria-label="Product details">
       <article className="buy-clean-option3-rail-accordion">
-        <Option3RailAccordionHeader title="Technical Specifications" isOpen={openAccordions.has('technical')} onToggle={() => onToggleAccordion('technical')} />
-        {openAccordions.has('technical') ? (
-          <div className="buy-clean-option3-rail-accordion__specs">
-            {railTechnicalSpecColumns.map((column, columnIndex) => (
-              <div key={`option3-spec-column-${columnIndex}`}>
-                {column.map((item) => (
-                  <section key={item.title}>
-                    <h3>{item.title}</h3>
-                    {Array.isArray(item.copy) ? (
-                      <div>
-                        {item.copy.map((line) => <p key={line}>{line}</p>)}
-                      </div>
-                    ) : (
-                      <p>{item.copy}</p>
-                    )}
-                  </section>
-                ))}
-              </div>
-            ))}
-          </div>
-        ) : null}
+        <Option3RailAccordionHeader title="Explore Features" onToggle={() => onOpenPanel('features')} />
       </article>
 
       <article className="buy-clean-option3-rail-accordion">
-        <Option3RailAccordionHeader title="What's Included" isOpen={openAccordions.has('included')} onToggle={() => onToggleAccordion('included')} />
-        {openAccordions.has('included') ? (
-          <div className="buy-clean-option3-rail-accordion__included">
-            {includedAccordionItems.map((item) => (
-              <section key={item.title}>
-                <img src={item.image} alt="" />
-                <p>{item.title}</p>
-              </section>
-            ))}
-          </div>
-        ) : null}
+        <Option3RailAccordionHeader title="Technical Specifications" onToggle={() => onOpenPanel('technical')} />
       </article>
 
       <article className="buy-clean-option3-rail-accordion">
-        <Option3RailAccordionHeader title="Support & Documentation" isOpen={openAccordions.has('support')} onToggle={() => onToggleAccordion('support')} />
-        {openAccordions.has('support') ? (
-          <div className="buy-clean-option3-rail-accordion__support">
-            {supportRailItems.map((item) => (
-              <button type="button" key={item}>
-                <span>{item}</span>
-                <i aria-hidden="true" />
-              </button>
-            ))}
-          </div>
-        ) : null}
+        <Option3RailAccordionHeader title="What's Included" onToggle={() => onOpenPanel('included')} />
+      </article>
+
+      <article className="buy-clean-option3-rail-accordion">
+        <Option3RailAccordionHeader title="Support & Documentation" onToggle={() => onOpenPanel('support')} />
+      </article>
+
+      <article className="buy-clean-option3-rail-accordion">
+        <Option3RailAccordionHeader title="Customer Reviews" onToggle={() => onOpenPanel('reviews')} />
+      </article>
+
+      <article className="buy-clean-option3-rail-accordion">
+        <Option3RailAccordionHeader title="FAQS" onToggle={() => onOpenPanel('faqs')} />
       </article>
     </section>
   );
+}
+
+function Option3RailPanelContent({ mode }) {
+  if (mode === 'technical') {
+    return (
+      <div className="buy-clean-option3-panel-details buy-clean-option3-panel-details--technical">
+        {railTechnicalSpecColumns.map((column, columnIndex) => (
+          <div key={`option3-panel-spec-column-${columnIndex}`}>
+            {column.map((item) => (
+              <section key={item.title}>
+                <h3>{item.title}</h3>
+                {Array.isArray(item.copy) ? (
+                  <div>
+                    {item.copy.map((line) => <p key={line}>{line}</p>)}
+                  </div>
+                ) : (
+                  <p>{item.copy}</p>
+                )}
+              </section>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (mode === 'included') {
+    return (
+      <div className="buy-clean-option3-panel-details buy-clean-option3-panel-details--included">
+        {includedAccordionItems.map((item) => (
+          <section key={item.title}>
+            <img src={item.image} alt="" />
+            <p>{item.title}</p>
+          </section>
+        ))}
+      </div>
+    );
+  }
+
+  if (mode === 'support') {
+    return (
+      <div className="buy-clean-option3-panel-details buy-clean-option3-panel-details--support">
+        {supportRailItems.map((item) => (
+          <button type="button" key={item}>
+            <span>{item}</span>
+            <i aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  if (mode === 'faqs') {
+    return (
+      <div className="buy-clean-option3-panel-details buy-clean-option3-panel-details--faqs">
+        {faqItems.map((item, index) => (
+          <section key={`${item.question}-${index}`}>
+            <h3>{item.question}</h3>
+            <p>{item.answer}</p>
+          </section>
+        ))}
+      </div>
+    );
+  }
+
+  return null;
 }
 
 function CustomerReviewsPanel() {
@@ -761,7 +1091,7 @@ function CustomerReviewsPanel() {
               <ReviewStars />
               <span>190 reviews</span>
             </p>
-            <small>135 out 166 (81%) reviewers recommended this product</small>
+            <small>135 out 166 (81%) reviewers<br className="buy-clean-mobile-break" /> recommended this product</small>
           </div>
         </div>
         <div className="buy-clean-reviews-meter-list">
@@ -838,34 +1168,43 @@ function CustomerReviewsAccordion({ isOpen, onToggle, reviewsRef }) {
   );
 }
 
-function FaqAccordion() {
+function FaqAccordion({ isOpen = true, onToggle = () => {}, isCollapsible = false }) {
   return (
-    <section className="buy-clean-accordion buy-clean-accordion--faq" aria-label="FAQS">
-      <div className="buy-clean-accordion__faq-title">
-        <h2>FAQS</h2>
-      </div>
-      <div className="buy-clean-accordion__faq-list">
-        {faqItems.map((item, index) => (
-          <article className="buy-clean-accordion__faq-item" key={`${item.question}-${index}`}>
-            <h3>{item.question}</h3>
-            <p>{item.answer}</p>
-          </article>
-        ))}
-      </div>
+    <section className={`buy-clean-accordion buy-clean-accordion--faq${isCollapsible ? ' is-collapsible' : ''}${isOpen ? ' is-open' : ''}`} aria-label="FAQS">
+      {isCollapsible ? (
+        <AccordionHeader title="FAQS" isOpen={isOpen} onToggle={onToggle} />
+      ) : (
+        <div className="buy-clean-accordion__faq-title">
+          <h2>FAQS</h2>
+        </div>
+      )}
+      {isOpen ? (
+        <div className="buy-clean-accordion__faq-list">
+          {faqItems.map((item, index) => (
+            <article className="buy-clean-accordion__faq-item" key={`${item.question}-${index}`}>
+              <h3>{item.question}</h3>
+              <p>{item.answer}</p>
+            </article>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }
 
-function ExpandedAccordions({ openAccordions, onToggleAccordion, reviewsRef, hideReviews = false, isRail = false }) {
+function ExpandedAccordions({ openAccordions, onToggleAccordion, reviewsRef, hideReviews = false, isRail = false, isFaqCollapsedBeforeReviews = false }) {
   return (
     <section className="buy-clean-afterfold" aria-label="Product details">
       <TechnicalSpecifications isOpen={openAccordions.has('technical')} onToggle={() => onToggleAccordion('technical')} isRail={isRail} />
       <IncludedAccordion isOpen={openAccordions.has('included')} onToggle={() => onToggleAccordion('included')} />
       <SupportAccordion isOpen={openAccordions.has('support')} onToggle={() => onToggleAccordion('support')} isRail={isRail} />
+      {isFaqCollapsedBeforeReviews ? (
+        <FaqAccordion isOpen={openAccordions.has('faqs')} onToggle={() => onToggleAccordion('faqs')} isCollapsible />
+      ) : null}
       {!hideReviews ? (
         <CustomerReviewsAccordion isOpen={openAccordions.has('reviews')} onToggle={() => onToggleAccordion('reviews')} reviewsRef={reviewsRef} />
       ) : null}
-      <FaqAccordion />
+      {!isFaqCollapsedBeforeReviews ? <FaqAccordion /> : null}
     </section>
   );
 }
@@ -897,6 +1236,8 @@ function CarouselControls({ align = 'end', canPrevious = false, canNext = true, 
 
 function FeatureHighlights({ useVideos = false }) {
   const [selectedFeature, setSelectedFeature] = useState(0);
+  const mobileViewportRef = useRef(null);
+  const mobileDragHandlers = useDragScrollHandlers(mobileViewportRef);
   const cards = useVideos ? option3FeaturePanelItems : featureHighlightCards;
   const activeFeature = cards[selectedFeature] || cards[0];
   const canCycleFeatures = useVideos && cards.length > 1;
@@ -929,7 +1270,7 @@ function FeatureHighlights({ useVideos = false }) {
       </div>
       <div className="buy-clean-feature-highlights__mobile">
         <h2>Get the Highlights</h2>
-        <div className="buy-clean-feature-highlights__viewport">
+        <div className="buy-clean-feature-highlights__viewport" ref={mobileViewportRef} {...mobileDragHandlers}>
           <div className="buy-clean-feature-highlights__track">
             {cards.map((card) => (
               <article className="buy-clean-feature-card" key={card.title}>
@@ -949,6 +1290,72 @@ function FeatureHighlights({ useVideos = false }) {
               </article>
             ))}
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeatureHighlightsAlt() {
+  const viewportRef = useRef(null);
+
+  const scrollCards = (direction) => {
+    const viewport = viewportRef.current;
+
+    if (!viewport) {
+      return;
+    }
+
+    const track = viewport.querySelector('.buy-clean-feature-alt__track');
+    const card = viewport.querySelector('.buy-clean-feature-alt__card');
+    const gap = track ? Number.parseFloat(window.getComputedStyle(track).columnGap) || 20 : 20;
+    const distance = (card?.getBoundingClientRect().width || 555) + gap;
+
+    viewport.scrollBy({
+      left: direction * distance,
+      behavior: 'smooth',
+    });
+  };
+
+  const playVideo = (event) => {
+    event.currentTarget.querySelector('video')?.play().catch(() => {});
+  };
+
+  const pauseVideo = (event) => {
+    const video = event.currentTarget.querySelector('video');
+
+    if (!video) {
+      return;
+    }
+
+    video.pause();
+    try {
+      video.currentTime = 0;
+    } catch {
+      // Metadata may not be loaded yet.
+    }
+  };
+
+  return (
+    <section className="buy-clean-feature-alt" aria-label="Feature Highlights alternative">
+      <div className="buy-clean-feature-alt__header">
+        <h2>Feature Highlights</h2>
+        <CarouselControls canPrevious canNext onPrevious={() => scrollCards(-1)} onNext={() => scrollCards(1)} />
+      </div>
+      <div className="buy-clean-feature-alt__viewport" ref={viewportRef}>
+        <div className="buy-clean-feature-alt__track">
+          {option3FeaturePanelItems.map((item) => (
+            <article className="buy-clean-feature-alt__card" key={item.title} onMouseEnter={playVideo} onMouseLeave={pauseVideo}>
+              <figure>
+                <video muted loop playsInline preload="metadata">
+                  <source src={item.video} type="video/mp4" />
+                </video>
+                <span className="buy-clean-feature-alt__play" aria-hidden="true" />
+              </figure>
+              <h3>{item.title}</h3>
+              <p>{item.copy}</p>
+            </article>
+          ))}
         </div>
       </div>
     </section>
@@ -996,6 +1403,8 @@ function ProductCarouselCard({ product }) {
 
 function ProductCarouselSection({ section }) {
   const viewportRef = useRef(null);
+  const carouselDragRef = useRef(null);
+  const suppressCarouselClickRef = useRef(false);
   const [scrollState, setScrollState] = useState({ canPrevious: false, canNext: false });
 
   const updateScrollState = () => {
@@ -1035,11 +1444,11 @@ function ProductCarouselSection({ section }) {
     };
   }, [section.products.length]);
 
-  const scrollCarousel = (direction) => {
+  const getCarouselMetrics = () => {
     const viewport = viewportRef.current;
 
     if (!viewport) {
-      return;
+      return { step: 0, maxIndex: 0 };
     }
 
     const firstCard = viewport.querySelector('.buy-clean-product-card');
@@ -1047,12 +1456,146 @@ function ProductCarouselSection({ section }) {
     const gap = track ? parseFloat(window.getComputedStyle(track).columnGap) || 0 : 0;
     const cardWidth = firstCard?.getBoundingClientRect().width || viewport.clientWidth;
 
-    viewport.scrollBy({
-      left: direction * (cardWidth + gap),
+    return {
+      step: cardWidth + gap,
+      maxIndex: Math.max(0, section.products.length - 1),
+    };
+  };
+
+  const snapCarouselToIndex = (index) => {
+    const viewport = viewportRef.current;
+    const { step, maxIndex } = getCarouselMetrics();
+
+    if (!viewport || !step) {
+      return;
+    }
+
+    const targetIndex = Math.min(maxIndex, Math.max(0, index));
+
+    viewport.scrollTo({
+      left: targetIndex * step,
       behavior: 'smooth',
     });
 
     window.setTimeout(updateScrollState, 360);
+  };
+
+  const stopCarouselDrag = (event) => {
+    const viewport = viewportRef.current;
+    const dragState = carouselDragRef.current;
+
+    if (!viewport || !dragState) {
+      return;
+    }
+
+    if (event?.pointerId !== undefined && viewport.hasPointerCapture?.(event.pointerId)) {
+      viewport.releasePointerCapture(event.pointerId);
+    }
+
+    viewport.classList.remove('is-dragging');
+    carouselDragRef.current = null;
+
+    if (!dragState.didDrag) {
+      return;
+    }
+
+    const { step } = getCarouselMetrics();
+    const releaseDelta = (event?.clientX ?? dragState.lastX ?? dragState.startX) - dragState.startX;
+    const threshold = step ? Math.min(80, step * 0.18) : 48;
+    let nextIndex = Math.round(viewport.scrollLeft / Math.max(step, 1));
+
+    if (Math.abs(releaseDelta) >= threshold) {
+      nextIndex = dragState.startIndex + (releaseDelta < 0 ? 1 : -1);
+    }
+
+    suppressCarouselClickRef.current = true;
+    snapCarouselToIndex(nextIndex);
+    window.setTimeout(() => {
+      suppressCarouselClickRef.current = false;
+    }, 0);
+  };
+
+  const carouselDragHandlers = {
+    onPointerDown: (event) => {
+      const viewport = viewportRef.current;
+
+      if (
+        !viewport
+        || event.isPrimary === false
+        || (event.pointerType === 'mouse' && event.button !== 0)
+        || viewport.scrollWidth <= viewport.clientWidth + 1
+      ) {
+        return;
+      }
+
+      const { step } = getCarouselMetrics();
+
+      carouselDragRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        lastX: event.clientX,
+        scrollLeft: viewport.scrollLeft,
+        startIndex: step ? Math.round(viewport.scrollLeft / step) : 0,
+        didDrag: false,
+      };
+      viewport.setPointerCapture?.(event.pointerId);
+    },
+    onPointerMove: (event) => {
+      const viewport = viewportRef.current;
+      const dragState = carouselDragRef.current;
+
+      if (!viewport || !dragState || dragState.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const deltaX = event.clientX - dragState.startX;
+      const deltaY = event.clientY - dragState.startY;
+
+      dragState.lastX = event.clientX;
+
+      if (!dragState.didDrag) {
+        if (Math.abs(deltaY) > 8 && Math.abs(deltaY) > Math.abs(deltaX)) {
+          stopCarouselDrag(event);
+          return;
+        }
+
+        if (Math.abs(deltaX) < 6) {
+          return;
+        }
+
+        dragState.didDrag = true;
+        viewport.classList.add('is-dragging');
+      }
+
+      event.preventDefault();
+      viewport.scrollLeft = dragState.scrollLeft - deltaX;
+    },
+    onPointerUp: stopCarouselDrag,
+    onPointerCancel: stopCarouselDrag,
+    onLostPointerCapture: stopCarouselDrag,
+    onClickCapture: (event) => {
+      if (!suppressCarouselClickRef.current) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      suppressCarouselClickRef.current = false;
+    },
+  };
+
+  const scrollCarousel = (direction) => {
+    const viewport = viewportRef.current;
+
+    if (!viewport) {
+      return;
+    }
+
+    const { step } = getCarouselMetrics();
+    const currentIndex = step ? Math.round(viewport.scrollLeft / step) : 0;
+
+    snapCarouselToIndex(currentIndex + direction);
   };
 
   return (
@@ -1066,7 +1609,7 @@ function ProductCarouselSection({ section }) {
           onNext={() => scrollCarousel(1)}
         />
       </header>
-      <div className="buy-clean-carousel__viewport" ref={viewportRef}>
+      <div className="buy-clean-carousel__viewport" ref={viewportRef} {...carouselDragHandlers}>
         <div className="buy-clean-carousel__track">
           {section.products.map((product) => (
             <ProductCarouselCard product={product} key={product.title} />
@@ -1077,14 +1620,14 @@ function ProductCarouselSection({ section }) {
   );
 }
 
-function ProductCarousels() {
+function ProductCarousels({ onCompareOpen }) {
   return (
     <section className="buy-clean-carousels" aria-label="Related products">
       {carouselSections.map((section) => (
         <ProductCarouselSection section={section} key={section.title} />
       ))}
       <div className="buy-clean-carousels__compare">
-        <button type="button">Compare Kettles</button>
+        <button type="button" onClick={onCompareOpen}>Compare Kettles</button>
       </div>
     </section>
   );
@@ -1106,7 +1649,57 @@ function PaletteCleanse() {
   );
 }
 
-function PurchaseDockMarkup({ cartTotal, quantity, onDecreaseQuantity, onIncreaseQuantity }) {
+function StepAtcControl({ cartTotal, quantity, isActive, onAdd, onDecrease, onIncrease }) {
+  if (!isActive) {
+    return (
+      <button className="buy-clean-step-atc__button" type="button" onClick={onAdd}>
+        Add to cart
+      </button>
+    );
+  }
+
+  return (
+    <div className="buy-clean-step-atc__counter" aria-label="Cart quantity">
+      <button type="button" aria-label="Decrease cart quantity" onClick={onDecrease}>−</button>
+      <span>{quantity}</span>
+      <button type="button" aria-label="Increase cart quantity" disabled={quantity === MAX_QUANTITY} onClick={onIncrease}>+</button>
+    </div>
+  );
+}
+
+function StepAtcMarkup({ cartTotal, quantity, isActive, onAdd, onDecrease, onIncrease }) {
+  return (
+    <div className="buy-clean-step-atc">
+      <div className="buy-clean-step-atc__price">
+        <strong>{cartTotal}</strong>
+        <span>Free Shipping</span>
+      </div>
+      <StepAtcControl
+        cartTotal={cartTotal}
+        quantity={quantity}
+        isActive={isActive}
+        onAdd={onAdd}
+        onDecrease={onDecrease}
+        onIncrease={onIncrease}
+      />
+    </div>
+  );
+}
+
+function PurchaseDockMarkup({ cartTotal, quantity, onDecreaseQuantity, onIncreaseQuantity, hasStepAtc = false, isStepAtcActive = false, onStepAtcAdd, onStepAtcDecrease }) {
+  if (hasStepAtc) {
+    return (
+      <StepAtcMarkup
+        cartTotal={cartTotal}
+        quantity={quantity}
+        isActive={isStepAtcActive}
+        onAdd={onStepAtcAdd}
+        onDecrease={onStepAtcDecrease}
+        onIncrease={onIncreaseQuantity}
+      />
+    );
+  }
+
   return (
     <>
       <div className="buy-clean-purchase-dock__top">
@@ -1131,15 +1724,33 @@ function PurchaseDockMarkup({ cartTotal, quantity, onDecreaseQuantity, onIncreas
   );
 }
 
-function PurchaseDock({ cartTotal, quantity, onDecreaseQuantity, onIncreaseQuantity }) {
+function PurchaseDock({ cartTotal, quantity, onDecreaseQuantity, onIncreaseQuantity, hasStepAtc = false, isStepAtcActive = false, onStepAtcAdd, onStepAtcDecrease }) {
   return (
-    <section className="buy-clean-purchase-dock" aria-label="Purchase summary">
+    <section className={`buy-clean-purchase-dock${hasStepAtc ? ' is-step-atc' : ''}`} aria-label="Purchase summary">
       <PurchaseDockMarkup
         cartTotal={cartTotal}
         quantity={quantity}
         onDecreaseQuantity={onDecreaseQuantity}
         onIncreaseQuantity={onIncreaseQuantity}
+        hasStepAtc={hasStepAtc}
+        isStepAtcActive={isStepAtcActive}
+        onStepAtcAdd={onStepAtcAdd}
+        onStepAtcDecrease={onStepAtcDecrease}
       />
+    </section>
+  );
+}
+
+function StickyAtcRow({ cartTotal }) {
+  return (
+    <section className="buy-clean-sticky-atc" aria-label="Sticky add to cart">
+      <strong>the Smart Kettle<sup>TM</sup> Luxe</strong>
+      <div>
+        <span>{cartTotal}</span>
+        <button className="buy-clean-add" type="button">
+          <span>Add to cart</span>
+        </button>
+      </div>
     </section>
   );
 }
@@ -1174,8 +1785,44 @@ function WarrantyOptions({ selectedWarranty, onSelectWarranty }) {
 }
 
 function SwatchButtons({ selectedColor, onSelectColor }) {
+  const viewportRef = useRef(null);
+  const swatchTapRef = useRef(null);
+
+  const handleSwatchPointerDown = (event, index) => {
+    if (event.isPrimary === false || (event.pointerType === 'mouse' && event.button !== 0)) {
+      return;
+    }
+
+    swatchTapRef.current = {
+      index,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+    };
+  };
+
+  const handleSwatchPointerUp = (event, index) => {
+    const tapState = swatchTapRef.current;
+
+    if (!tapState || tapState.pointerId !== event.pointerId || tapState.index !== index) {
+      return;
+    }
+
+    swatchTapRef.current = null;
+
+    const deltaX = event.clientX - tapState.startX;
+    const deltaY = event.clientY - tapState.startY;
+
+    if (Math.hypot(deltaX, deltaY) > 24) {
+      return;
+    }
+
+    event.preventDefault();
+    onSelectColor(index);
+  };
+
   return (
-    <div className="buy-clean-swatches">
+    <div className="buy-clean-swatches" ref={viewportRef}>
       {colors.map((option, index) => (
         <button
           className={index === selectedColor ? 'is-selected' : ''}
@@ -1183,6 +1830,11 @@ function SwatchButtons({ selectedColor, onSelectColor }) {
           aria-label={option.name}
           aria-pressed={index === selectedColor}
           onClick={() => onSelectColor(index)}
+          onPointerDown={(event) => handleSwatchPointerDown(event, index)}
+          onPointerUp={(event) => handleSwatchPointerUp(event, index)}
+          onPointerCancel={() => {
+            swatchTapRef.current = null;
+          }}
           key={option.name}
         >
           <img src={option.swatch} alt="" />
@@ -1267,21 +1919,22 @@ function DebugPanel({
     hideFeatures: 'Hide features',
     bottomThumbnails: 'Bottom thumbnails',
     railTextBump: 'Rail text bump',
+    flipAtc: 'Flip ATC',
   };
 
   return (
     <aside className="buy-clean-debug" aria-label="Buy page debug panel">
       <div className="buy-clean-debug__header">
         <strong>Buy page</strong>
-        <span>P panel / G grid</span>
       </div>
 
       <label>
         <span>Layout</span>
         <select value={activeLayout} onChange={(event) => onLayoutChange(event.target.value)}>
-          {Object.entries(layouts).map(([key, layout]) => (
-            <option value={key} key={key}>{layout.label}</option>
-          ))}
+          {debugLayoutKeys.map((key) => {
+            const layout = layouts[key];
+            return <option value={key} key={key}>{layout.label}</option>;
+          })}
         </select>
       </label>
 
@@ -1364,20 +2017,52 @@ function DebugPanel({
   );
 }
 
+function LayoutOnlyPanel({
+  activeLayout,
+  onLayoutChange,
+  isOpen,
+}) {
+  if (!isOpen) {
+    return null;
+  }
+
+  return (
+    <aside className="buy-clean-debug buy-clean-debug--layout-only" aria-label="Buy page layout panel">
+      <div className="buy-clean-debug__header">
+        <strong>Buy page</strong>
+      </div>
+
+      <label>
+        <span>Layout</span>
+        <select value={activeLayout} onChange={(event) => onLayoutChange(event.target.value)}>
+          {debugLayoutKeys.map((key) => {
+            const layout = layouts[key];
+            return <option value={key} key={key}>{layout.label}</option>;
+          })}
+        </select>
+      </label>
+    </aside>
+  );
+}
+
 export default function BuyCleanPage() {
   const reviewsRef = useRef(null);
+  const paletteStageRef = useRef(null);
+  const atfArtboardRef = useRef(null);
   const heroSwipeRef = useRef(null);
   const heroVideoRef = useRef(null);
   const option3FeatureVideoRef = useRef(null);
   const [selectedColor, setSelectedColor] = useState(0);
   const [selectedGallery, setSelectedGallery] = useState(gallery[0].id);
   const [quantity, setQuantity] = useState(1);
+  const [isStepAtcActive, setIsStepAtcActive] = useState(false);
   const [selectedAddOns, setSelectedAddOns] = useState(() => new Set());
   const [selectedWarranty, setSelectedWarranty] = useState('one-year');
   const [openAccordions, setOpenAccordions] = useState(() => new Set());
   const [activeLayout, setActiveLayout] = useState('option2');
   const [layoutVariables, setLayoutVariables] = useState(layouts.option2.variables);
   const [isDebugOpen, setIsDebugOpen] = useState(false);
+  const [isLayoutPanelOpen, setIsLayoutPanelOpen] = useState(false);
   const [isGridVisible, setIsGridVisible] = useState(false);
   const [isResponsive, setIsResponsive] = useState(() => {
     const storedResponsive = window.localStorage.getItem('buyCleanResponsive');
@@ -1388,7 +2073,9 @@ export default function BuyCleanPage() {
   const [isAccordionMoved, setIsAccordionMoved] = useState(false);
   const [isGreySpacerVisible, setIsGreySpacerVisible] = useState(false);
   const [isOption2RailReleased, setIsOption2RailReleased] = useState(false);
+  const [hasATFLeftViewport, setHasATFLeftViewport] = useState(false);
   const [isOption3FeaturesOpen, setIsOption3FeaturesOpen] = useState(false);
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [option3PanelMode, setOption3PanelMode] = useState('features');
   const [selectedOption3Feature, setSelectedOption3Feature] = useState(0);
   const [galleryDirection, setGalleryDirection] = useState(0);
@@ -1405,6 +2092,8 @@ export default function BuyCleanPage() {
   const hasIsolatedSwatches = hasOptionVariables && layoutVariables.isolatedSwatches && !hasLargeSwatches;
   const hasBottomThumbnails = hasOptionVariables && layoutVariables.bottomThumbnails;
   const hasRailTextBump = Boolean(layoutVariables.railTextBump);
+  const hasFlippedAtc = Boolean(layoutVariables.flipAtc);
+  const hasStepAtc = Boolean(layoutVariables.stepAtc);
   const shouldHideFeatures = Boolean(layoutVariables.hideFeatures);
   const activeOption3Feature = option3FeaturePanelItems[selectedOption3Feature];
   const selectedAddOnTotal = addOns.reduce((total, item) => (
@@ -1426,8 +2115,14 @@ export default function BuyCleanPage() {
         return;
       }
 
-      if (event.key.toLowerCase() === 'p') {
+      if (event.key.toLowerCase() === 'y') {
         setIsDebugOpen((value) => !value);
+        setIsLayoutPanelOpen(false);
+      }
+
+      if (event.key.toLowerCase() === 'p') {
+        setIsLayoutPanelOpen((value) => !value);
+        setIsDebugOpen(false);
       }
 
       if (event.key.toLowerCase() === 'g') {
@@ -1442,6 +2137,44 @@ export default function BuyCleanPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (!isOption3Layout) {
+      setHasATFLeftViewport(false);
+      return undefined;
+    }
+
+    let animationFrame = 0;
+
+    const updateStickyATC = () => {
+      animationFrame = 0;
+      const artboard = atfArtboardRef.current;
+      if (!artboard) {
+        setHasATFLeftViewport(false);
+        return;
+      }
+
+      setHasATFLeftViewport(artboard.getBoundingClientRect().bottom <= 0);
+    };
+
+    const requestUpdate = () => {
+      if (!animationFrame) {
+        animationFrame = window.requestAnimationFrame(updateStickyATC);
+      }
+    };
+
+    updateStickyATC();
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    window.addEventListener('resize', requestUpdate);
+
+    return () => {
+      window.removeEventListener('scroll', requestUpdate);
+      window.removeEventListener('resize', requestUpdate);
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [isOption3Layout]);
 
   useEffect(() => {
     window.localStorage.setItem('buyCleanResponsive', String(isResponsive));
@@ -1462,6 +2195,58 @@ export default function BuyCleanPage() {
   useEffect(() => {
     window.localStorage.setItem('buyCleanGreySpacer', String(isGreySpacerVisible));
   }, [isGreySpacerVisible]);
+
+  useEffect(() => {
+    const stage = paletteStageRef.current;
+
+    if (!isPaletteCleanseVisible || !stage) {
+      document.documentElement.style.removeProperty('--buy-clean-palette-scale');
+      return undefined;
+    }
+
+    const desktopQuery = window.matchMedia('(min-width: 768px)');
+    let animationFrame = 0;
+
+    const updateScale = () => {
+      animationFrame = 0;
+
+      if (!desktopQuery.matches) {
+        stage.style.removeProperty('--buy-clean-palette-scale');
+        return;
+      }
+
+      const artboard = stage.querySelector('.buy-clean-artboard');
+      const stageTop = stage.getBoundingClientRect().top + window.scrollY;
+      const revealDistance = Math.max(1, artboard?.offsetHeight || window.innerHeight);
+      const progress = Math.min(Math.max((window.scrollY - stageTop) / revealDistance, 0), 1);
+      const scale = 1.12 - (progress * 0.12);
+
+      stage.style.setProperty('--buy-clean-palette-scale', scale.toFixed(4));
+    };
+
+    const requestUpdate = () => {
+      if (!animationFrame) {
+        animationFrame = window.requestAnimationFrame(updateScale);
+      }
+    };
+
+    updateScale();
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    window.addEventListener('resize', requestUpdate);
+    desktopQuery.addEventListener?.('change', requestUpdate);
+
+    return () => {
+      window.removeEventListener('scroll', requestUpdate);
+      window.removeEventListener('resize', requestUpdate);
+      desktopQuery.removeEventListener?.('change', requestUpdate);
+
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+
+      stage.style.removeProperty('--buy-clean-palette-scale');
+    };
+  }, [isPaletteCleanseVisible]);
 
   useEffect(() => {
     if (!isOption3Layout) {
@@ -1747,11 +2532,41 @@ export default function BuyCleanPage() {
     });
   };
 
+  const activateStepAtc = () => {
+    setQuantity(1);
+    setIsStepAtcActive(true);
+  };
+
+  const decreaseStepAtc = () => {
+    setQuantity((value) => {
+      if (value <= 1) {
+        setIsStepAtcActive(false);
+        return 1;
+      }
+
+      return value - 1;
+    });
+  };
+
   const moveOption3Feature = (direction) => {
     setSelectedOption3Feature((currentIndex) => (
       (currentIndex + direction + option3FeaturePanelItems.length) % option3FeaturePanelItems.length
     ));
   };
+
+  const openOption3Panel = (mode) => {
+    setOption3PanelMode(mode);
+    setIsOption3FeaturesOpen(true);
+  };
+
+  const option3PanelTitle = {
+    features: 'Feature Highlights',
+    reviews: 'Customer Reviews',
+    technical: 'Technical Specifications',
+    included: "What's Included",
+    support: 'Support & Documentation',
+    faqs: 'FAQS',
+  }[option3PanelMode] || 'Feature Highlights';
 
   const selectGallery = (id) => {
     setGalleryDirection(0);
@@ -1765,28 +2580,66 @@ export default function BuyCleanPage() {
   };
 
   const handleHeroPointerDown = (event) => {
-    if (!event.isPrimary || !window.matchMedia('(max-width: 767px)').matches) {
+    if (
+      event.isPrimary === false
+      || (event.pointerType === 'mouse' && event.button !== 0)
+    ) {
       return;
     }
 
+    event.currentTarget.setPointerCapture?.(event.pointerId);
     heroSwipeRef.current = {
       pointerId: event.pointerId,
-      x: event.clientX,
-      y: event.clientY,
+      startX: event.clientX,
+      startY: event.clientY,
+      didDrag: false,
     };
   };
 
-  const handleHeroPointerUp = (event) => {
-    const swipeStart = heroSwipeRef.current;
+  const handleHeroPointerMove = (event) => {
+    const swipeState = heroSwipeRef.current;
 
-    if (!swipeStart || swipeStart.pointerId !== event.pointerId) {
+    if (!swipeState || swipeState.pointerId !== event.pointerId) {
       return;
     }
 
-    heroSwipeRef.current = null;
+    const deltaX = event.clientX - swipeState.startX;
+    const deltaY = event.clientY - swipeState.startY;
 
-    const deltaX = event.clientX - swipeStart.x;
-    const deltaY = event.clientY - swipeStart.y;
+    if (!swipeState.didDrag) {
+      if (Math.abs(deltaY) > 8 && Math.abs(deltaY) > Math.abs(deltaX)) {
+        handleHeroPointerCancel(event);
+        return;
+      }
+
+      if (Math.abs(deltaX) < 6) {
+        return;
+      }
+
+      swipeState.didDrag = true;
+      event.currentTarget.classList.add('is-dragging');
+    }
+
+    event.preventDefault();
+  };
+
+  const handleHeroPointerUp = (event) => {
+    const swipeState = heroSwipeRef.current;
+
+    if (!swipeState || swipeState.pointerId !== event.pointerId) {
+      return;
+    }
+
+    const deltaX = event.clientX - swipeState.startX;
+    const deltaY = event.clientY - swipeState.startY;
+
+    event.currentTarget.classList.remove('is-dragging');
+
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    heroSwipeRef.current = null;
 
     if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) {
       return;
@@ -1795,7 +2648,13 @@ export default function BuyCleanPage() {
     moveGallery(deltaX < 0 ? 1 : -1);
   };
 
-  const handleHeroPointerCancel = () => {
+  const handleHeroPointerCancel = (event) => {
+    event?.currentTarget?.classList.remove('is-dragging');
+
+    if (event?.currentTarget?.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
     heroSwipeRef.current = null;
   };
 
@@ -1855,11 +2714,12 @@ export default function BuyCleanPage() {
   };
 
   return (
-    <main className={`buy-clean-page${isResponsive ? ' is-responsive' : ''}${isSmoothScroll ? ' is-smooth' : ''}${isOption1Layout ? ' is-option1' : ''}${isOption2Layout ? ' is-option2' : ''}${isOption3Layout ? ' is-option3' : ''}${isDockedRailLayout ? ' is-docked-rail' : ''}${isOption3FeaturesOpen ? ' is-feature-panel-open' : ''}${isOption2RailReleased ? ' is-rail-released' : ''}${hasIsolatedSwatches ? ' is-isolated-swatches' : ''}${hasLargeSwatches ? ' is-large-swatches' : ''}${hasBottomThumbnails ? ' is-bottom-thumbnails' : ''}${hasRailTextBump ? ' is-rail-text-bump' : ''}${galleryDirection > 0 ? ' is-gallery-next' : ''}${galleryDirection < 0 ? ' is-gallery-prev' : ''}`} style={cssVariables}>
+    <>
+    <main className={`buy-clean-page${isResponsive ? ' is-responsive' : ''}${isSmoothScroll ? ' is-smooth' : ''}${isOption1Layout ? ' is-option1' : ''}${isOption2Layout ? ' is-option2' : ''}${isOption3Layout ? ' is-option3' : ''}${isDockedRailLayout ? ' is-docked-rail' : ''}${isOption3FeaturesOpen ? ' is-feature-panel-open' : ''}${isOption2RailReleased ? ' is-rail-released' : ''}${hasATFLeftViewport ? ' is-atf-past' : ''}${hasIsolatedSwatches ? ' is-isolated-swatches' : ''}${hasLargeSwatches ? ' is-large-swatches' : ''}${hasBottomThumbnails ? ' is-bottom-thumbnails' : ''}${hasRailTextBump ? ' is-rail-text-bump' : ''}${hasFlippedAtc ? ' is-flip-atc' : ''}${hasStepAtc ? ' is-step-atc' : ''}${galleryDirection > 0 ? ' is-gallery-next' : ''}${galleryDirection < 0 ? ' is-gallery-prev' : ''}`} style={cssVariables}>
       <GridOverlay visible={isGridVisible} />
-      <section className={`buy-clean-atf-stage${isPaletteCleanseVisible ? ' has-palette-cleanse' : ''}`} aria-label="Smart Kettle Luxe buy page">
+      <section ref={paletteStageRef} className={`buy-clean-atf-stage${isPaletteCleanseVisible ? ' has-palette-cleanse' : ''}${isPaletteCleanseVisible && isGreySpacerVisible ? ' has-grey-spacer' : ''}`} aria-label="Smart Kettle Luxe buy page">
         {isPaletteCleanseVisible ? <PaletteCleanse /> : null}
-        <section className="buy-clean-artboard" aria-label="Smart Kettle Luxe buy page">
+        <section ref={atfArtboardRef} className="buy-clean-artboard" aria-label="Smart Kettle Luxe buy page">
         <header className="buy-clean-nav">
           <a className="buy-clean-nav__logo" href="/" aria-label="Breville home">
             <img src={`${HEADER_ASSET_ROOT}/logo.svg`} alt="Breville" />
@@ -1908,18 +2768,21 @@ export default function BuyCleanPage() {
               <GalleryThumbs activeColor={activeColor} selectedGallery={selectedGallery} onSelectGallery={selectGallery} />
 
               <figure
+                key={`${activeGallery.id}-${selectedColor}`}
                 className={`buy-clean-hero${activeGallery.type === 'video' ? ` buy-clean-hero--video buy-clean-hero--${activeGallery.aspect}` : ''}`}
                 style={activeGallery.type === 'image' ? { '--buy-clean-active-hero-image': `url("${activeColor.image}")` } : undefined}
                 onPointerDown={handleHeroPointerDown}
+                onPointerMove={handleHeroPointerMove}
                 onPointerUp={handleHeroPointerUp}
                 onPointerCancel={handleHeroPointerCancel}
+                onLostPointerCapture={handleHeroPointerCancel}
               >
                 {activeGallery.type === 'video' ? (
                   <video ref={heroVideoRef} className={`buy-clean-hero__video buy-clean-hero__video--${activeGallery.aspect}`} autoPlay muted loop playsInline key={activeGallery.id}>
                     <source src={activeGallery.source} type="video/mp4" />
                   </video>
                 ) : (
-                  <img className="buy-clean-hero__image" src={activeColor.image} alt={activeColor.name} />
+                  <img className="buy-clean-hero__image" src={activeColor.image} alt={activeColor.name} key={activeColor.image} />
                 )}
               </figure>
             </div>
@@ -1969,24 +2832,6 @@ export default function BuyCleanPage() {
                 </section>
               ) : null}
 
-              <section className="buy-clean-option3-copy" aria-label="Product description">
-                <p>
-                  This 7 cup capacity smart kettle knows the ideal temperature to bring out optimal taste and quality of your favorite tea or coffee.
-                  5 temperature settings to brew Black, Green, White, Oolong Tea and French press coffee. Also features a soft opening lid to gently
-                  release hot steam and prevent hot water splash back.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOption3PanelMode('features');
-                    setIsOption3FeaturesOpen(true);
-                  }}
-                >
-                  Explore features
-                  <span aria-hidden="true" />
-                </button>
-              </section>
-
               {!isOption3Layout ? (
                 <section className={`buy-clean-color-picker${hasIsolatedSwatches ? ' is-isolated' : ''}`} aria-label="Color">
                 {!hasIsolatedSwatches ? (
@@ -2007,7 +2852,18 @@ export default function BuyCleanPage() {
                 </section>
               ) : null}
 
-              <section className="buy-clean-cart-row" aria-label="Add to cart">
+              <section className={`buy-clean-cart-row${hasStepAtc ? ' is-step-atc' : ''}`} aria-label="Add to cart">
+                {hasStepAtc ? (
+                  <StepAtcMarkup
+                    cartTotal={cartTotal}
+                    quantity={quantity}
+                    isActive={isStepAtcActive}
+                    onAdd={activateStepAtc}
+                    onDecrease={decreaseStepAtc}
+                    onIncrease={() => setQuantity((value) => Math.min(MAX_QUANTITY, value + 1))}
+                  />
+                ) : (
+                  <>
                 <div className="buy-clean-quantity">
                   <button type="button" aria-label="Decrease quantity" disabled={quantity === 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))}>−</button>
                   <span>{quantity}</span>
@@ -2017,6 +2873,8 @@ export default function BuyCleanPage() {
                   <span>Add to cart</span>
                   <span>{cartTotal}</span>
                 </button>
+                  </>
+                )}
               </section>
 
               <section className="buy-clean-included" aria-label="Included with Purchase">
@@ -2060,11 +2918,18 @@ export default function BuyCleanPage() {
                 })}
               </section>
               {isAccordionMoved && isOption3Layout ? (
-                <Option3RailAccordions openAccordions={openAccordions} onToggleAccordion={toggleAccordion} />
+                <Option3RailAccordions onOpenPanel={openOption3Panel} />
               ) : null}
               {isAccordionMoved && !isOption3Layout ? (
                 <div className="buy-clean-rail-accordions">
-                  <ExpandedAccordions openAccordions={openAccordions} onToggleAccordion={toggleAccordion} reviewsRef={reviewsRef} hideReviews={isOption3Layout} isRail />
+                  <ExpandedAccordions
+                    openAccordions={openAccordions}
+                    onToggleAccordion={toggleAccordion}
+                    reviewsRef={reviewsRef}
+                    hideReviews={isOption3Layout}
+                    isRail
+                    isFaqCollapsedBeforeReviews={isOption2Layout}
+                  />
                 </div>
               ) : null}
               <div className="buy-clean-rail-spacer" aria-hidden="true" />
@@ -2075,31 +2940,47 @@ export default function BuyCleanPage() {
                 quantity={quantity}
                 onDecreaseQuantity={() => setQuantity((value) => Math.max(1, value - 1))}
                 onIncreaseQuantity={() => setQuantity((value) => Math.min(MAX_QUANTITY, value + 1))}
+                hasStepAtc={hasStepAtc}
+                isStepAtcActive={isStepAtcActive}
+                onStepAtcAdd={activateStepAtc}
+                onStepAtcDecrease={decreaseStepAtc}
               />
             ) : null}
           </aside>
         </div>
         </section>
+        {isPaletteCleanseVisible && isGreySpacerVisible ? <div className="buy-clean-grey-spacer buy-clean-grey-spacer--reveal" aria-hidden="true" /> : null}
       </section>
 
-      {isGreySpacerVisible ? <div className="buy-clean-grey-spacer" aria-hidden="true" /> : null}
+      {isGreySpacerVisible && !isPaletteCleanseVisible ? <div className="buy-clean-grey-spacer" aria-hidden="true" /> : null}
       {!shouldHideFeatures ? <FeatureHighlights useVideos={isOption2Layout} /> : null}
       {!isAccordionMoved ? (
-        <ExpandedAccordions openAccordions={openAccordions} onToggleAccordion={toggleAccordion} reviewsRef={reviewsRef} hideReviews={isOption3Layout} />
+        <ExpandedAccordions
+          openAccordions={openAccordions}
+          onToggleAccordion={toggleAccordion}
+          reviewsRef={reviewsRef}
+          hideReviews={isOption3Layout}
+          isFaqCollapsedBeforeReviews={isOption2Layout}
+        />
       ) : null}
-      <ProductCarousels />
+      <ProductCarousels onCompareOpen={() => setIsCompareOpen(true)} />
+      <section className="motion-footer-section buy-clean-footer-section" aria-label="Footer">
+        <TestingFooter variant="reversed" linkHref={UPDATE_3_PATH} />
+      </section>
 
       <div className="buy-clean-feature-panel" aria-hidden={!isOption3FeaturesOpen}>
         <button className="buy-clean-feature-panel__scrim" type="button" aria-label="Close feature panel" onClick={() => setIsOption3FeaturesOpen(false)} />
-        <aside className={`buy-clean-feature-panel__drawer buy-clean-feature-panel__drawer--${option3PanelMode}`} aria-label={option3PanelMode === 'reviews' ? 'Customer reviews' : 'Product features'}>
+        <aside className={`buy-clean-feature-panel__drawer buy-clean-feature-panel__drawer--${option3PanelMode}`} aria-label={option3PanelTitle}>
           <header>
-            <h2>{option3PanelMode === 'reviews' ? 'Customer Reviews' : 'Feature Highlights'}</h2>
+            <h2>{option3PanelTitle}</h2>
             <button className="buy-clean-feature-panel__close" type="button" aria-label="Close feature panel" onClick={() => setIsOption3FeaturesOpen(false)}>
               <span aria-hidden="true" />
             </button>
           </header>
           {option3PanelMode === 'reviews' ? (
             <CustomerReviewsPanel />
+          ) : ['technical', 'included', 'support', 'faqs'].includes(option3PanelMode) ? (
+            <Option3RailPanelContent mode={option3PanelMode} />
           ) : (
             <>
               <figure>
@@ -2141,7 +3022,15 @@ export default function BuyCleanPage() {
         onGreySpacerChange={setIsGreySpacerVisible}
         isOpen={isDebugOpen}
       />
+      <LayoutOnlyPanel
+        activeLayout={activeLayout}
+        onLayoutChange={handleLayoutChange}
+        isOpen={isLayoutPanelOpen}
+      />
+      {isOption3Layout ? <StickyAtcRow cartTotal={cartTotal} /> : null}
     </main>
+    {isCompareOpen ? <CompareTakeover onClose={() => setIsCompareOpen(false)} /> : null}
+    </>
   );
 }
 
