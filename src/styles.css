@@ -24999,6 +24999,18 @@ html:has(.hero-only-page)::-webkit-scrollbar {
   content: none;
 }
 
+.blank-page .hero-only-header {
+  color: #313638;
+}
+
+.blank-page .hero-only-header__logo {
+  background: #421540;
+}
+
+.blank-page .hero-only-header__icon-button img {
+  filter: none;
+}
+
 .blank-page .hero-only__copy {
   position: absolute;
   bottom: 48px;
@@ -25008,6 +25020,7 @@ html:has(.hero-only-page)::-webkit-scrollbar {
   width: 528px;
   max-width: calc(100vw - 80px);
   padding: 0;
+  color: #313638;
   text-align: left;
 }
 
