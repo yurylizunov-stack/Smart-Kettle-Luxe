@@ -24995,6 +24995,10 @@ html:has(.hero-only-page)::-webkit-scrollbar {
   place-items: stretch;
 }
 
+.blank-page .hero-only__stage::after {
+  content: none;
+}
+
 .blank-page .hero-only__copy {
   position: absolute;
   bottom: 48px;
@@ -25119,6 +25123,10 @@ html:has(.hero-only-page)::-webkit-scrollbar {
     height: 100vh;
     height: 100svh;
     place-items: stretch;
+  }
+
+  .blank-page .hero-only__stage::after {
+    content: '';
   }
 
   .blank-page .hero-only__copy {
