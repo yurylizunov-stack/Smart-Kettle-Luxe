@@ -338,7 +338,17 @@ const globalVariables = {
 };
 
 const layoutToggleDefaults = {
+  option2: {
+    responsive: true,
+    smooth: true,
+    paletteCleanse: false,
+    accordionMoved: false,
+    greySpacer: false,
+  },
   option3: {
+    responsive: true,
+    smooth: true,
+    paletteCleanse: false,
     accordionMoved: true,
     greySpacer: true,
   },
@@ -2087,14 +2097,9 @@ export default function BuyCleanPage() {
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [isLayoutPanelOpen, setIsLayoutPanelOpen] = useState(false);
   const [isGridVisible, setIsGridVisible] = useState(false);
-  const [isResponsive, setIsResponsive] = useState(() => {
-    const storedResponsive = window.localStorage.getItem('buyCleanResponsive');
-    return window.matchMedia('(max-width: 1120px)').matches || storedResponsive === 'true';
-  });
+  const [isResponsive, setIsResponsive] = useState(true);
   const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 1120px)').matches);
-  const [isPaletteCleanseVisible, setIsPaletteCleanseVisible] = useState(() => (
-    window.localStorage.getItem(PALETTE_CLEANSE_STORAGE_KEY) === 'true'
-  ));
+  const [isPaletteCleanseVisible, setIsPaletteCleanseVisible] = useState(false);
   const [isSmoothScroll, setIsSmoothScroll] = useState(true);
   const [isAccordionMoved, setIsAccordionMoved] = useState(false);
   const [isGreySpacerVisible, setIsGreySpacerVisible] = useState(false);
@@ -2152,10 +2157,15 @@ export default function BuyCleanPage() {
       return;
     }
 
+    const toggleDefaults = layoutToggleDefaults.option2;
+
     setActiveLayout('option2');
     setLayoutVariables(layouts.option2.variables);
-    setIsAccordionMoved(false);
-    setIsGreySpacerVisible(false);
+    setIsResponsive(toggleDefaults.responsive);
+    setIsSmoothScroll(toggleDefaults.smooth);
+    setIsPaletteCleanseVisible(toggleDefaults.paletteCleanse);
+    setIsAccordionMoved(toggleDefaults.accordionMoved);
+    setIsGreySpacerVisible(toggleDefaults.greySpacer);
     setIsOption3FeaturesOpen(false);
   }, [activeLayout, isMobileViewport]);
 
@@ -2578,6 +2588,9 @@ export default function BuyCleanPage() {
 
     setActiveLayout(layoutKey);
     setLayoutVariables(layouts[layoutKey].variables);
+    setIsResponsive(toggleDefaults.responsive ?? true);
+    setIsSmoothScroll(toggleDefaults.smooth ?? true);
+    setIsPaletteCleanseVisible(Boolean(toggleDefaults.paletteCleanse));
     setIsAccordionMoved(Boolean(toggleDefaults.accordionMoved));
     setIsGreySpacerVisible(Boolean(toggleDefaults.greySpacer));
   };
