@@ -226,6 +226,7 @@ const bindResilientAutoplayVideo = (video) => {
 
 function BlankHeroOnlySection() {
   const stageRef = useRef(null);
+  const copyRef = useRef(null);
   const heroOverlay = 0.1;
   const overlayStops = {
     top: heroOverlay,
@@ -264,6 +265,33 @@ function BlankHeroOnlySection() {
     return () => {
       observer.disconnect();
       cleanupVideoBindings.forEach((cleanup) => cleanup());
+    };
+  }, []);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    const copy = copyRef.current;
+    const section = stage?.closest('.blank-hero');
+
+    if (!section || !copy) {
+      return undefined;
+    }
+
+    const tween = gsap.to(copy, {
+      autoAlpha: 0,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: section,
+        start: 'top top',
+        end: '45% top',
+        scrub: true,
+      },
+    });
+
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+      gsap.set(copy, { clearProps: 'opacity,visibility' });
     };
   }, []);
 
@@ -309,7 +337,7 @@ function BlankHeroOnlySection() {
             <source src="/assets/videos/mobile_hero.mp4" type="video/mp4" />
           </video>
 
-          <div className="hero-only__copy">
+          <div className="hero-only__copy" ref={copyRef}>
             <div className="hero-only__headline">
               <p className="hero-only__eyebrow">the Smart Kettle&trade; Luxe</p>
               <h1 className="hero-only__title">Brew Intelligently</h1>
@@ -1948,7 +1976,7 @@ function BlankDesktopFeatureStory({
             >
               <span className="blank-desktop-feature-story__nav-line" aria-hidden="true" />
               <span className="blank-desktop-feature-story__nav-label">
-                {String(index + 1).padStart(2, '0')}. {item.title.replace('™', '')}
+                {String(index + 1).padStart(2, '0')}
               </span>
             </button>
           ))}
