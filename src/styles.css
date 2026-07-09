@@ -795,13 +795,13 @@ body {
   opacity: 0;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1120px) {
   .buy-clean-rail-spacer {
     display: none;
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1121px) {
   .buy-clean-nav__menu {
     display: none !important;
   }
@@ -1308,7 +1308,7 @@ body {
   line-height: 16px;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1121px) {
   .buy-clean-page.is-isolated-swatches .buy-clean-color-picker.is-isolated {
     display: none;
   }
@@ -1350,7 +1350,7 @@ body {
   object-fit: cover;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1121px) {
   .buy-clean-page.is-docked-rail.is-large-swatches .buy-clean-color-picker .buy-clean-swatches {
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: var(--buy-clean-swatch-gap);
@@ -1561,7 +1561,7 @@ body {
   line-height: 24px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1120px) {
   .buy-clean-sticky-atc {
     height: 80px;
     justify-content: center;
@@ -3450,7 +3450,7 @@ body {
   will-change: transform;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1121px) {
   .buy-clean-page.is-option3 .buy-clean-palette-cleanse img {
     height: calc(100% + 10vh);
   }
@@ -4416,6 +4416,10 @@ body {
   min-width: 0;
 }
 
+.buy-clean-page.is-responsive .buy-clean-accordion__included-media {
+  width: 100%;
+}
+
 .buy-clean-page.is-responsive .buy-clean-accordion__included-item img {
   width: 100%;
   height: auto;
@@ -4474,6 +4478,34 @@ body {
   .buy-clean-page.is-responsive .buy-clean-product-card {
     flex-basis: calc((100% - 60px) / 4);
   }
+
+  .buy-clean-page.is-responsive .buy-clean-accordion__included-grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+
+  .buy-clean-page.is-responsive .buy-clean-accordion__support {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .buy-clean-page.is-responsive .buy-clean-support-card--large {
+    grid-column: span 4;
+    width: auto;
+    min-width: 0;
+  }
+
+  .buy-clean-page.is-responsive .buy-clean-support-card--large > img:not(.buy-clean-support-card__arrow) {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 390 / 305;
+  }
+
+  .buy-clean-page.is-responsive .buy-clean-accordion__support-stack {
+    grid-column: span 4;
+    width: auto;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 1120px) {
@@ -4519,7 +4551,7 @@ body {
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1120px) {
   html:has(.buy-clean-page.is-responsive),
   body:has(.buy-clean-page.is-responsive),
   #root:has(.buy-clean-page.is-responsive) {

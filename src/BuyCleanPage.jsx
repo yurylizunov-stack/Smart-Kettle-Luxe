@@ -304,6 +304,7 @@ const layouts = {
       railTextBump: false,
       flipAtc: false,
       stepAtc: false,
+      cardCart: true,
     },
   },
   option3: {
@@ -918,7 +919,7 @@ function IncludedAccordion({ isOpen, onToggle }) {
           {includedAccordionItems.map((item, index) => (
             <article className="buy-clean-accordion__included-item" key={`${item.title}-${index}`}>
               <picture className="buy-clean-accordion__included-media">
-                {item.mobileImage ? <source media="(max-width: 767px)" srcSet={item.mobileImage} /> : null}
+                {item.mobileImage ? <source media="(max-width: 1120px)" srcSet={item.mobileImage} /> : null}
                 <img src={item.image} alt="" />
               </picture>
               <p>{item.title}</p>
@@ -2087,9 +2088,9 @@ export default function BuyCleanPage() {
   const [isGridVisible, setIsGridVisible] = useState(false);
   const [isResponsive, setIsResponsive] = useState(() => {
     const storedResponsive = window.localStorage.getItem('buyCleanResponsive');
-    return window.matchMedia('(max-width: 767px)').matches || storedResponsive === 'true';
+    return window.matchMedia('(max-width: 1120px)').matches || storedResponsive === 'true';
   });
-  const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 1120px)').matches);
   const [isPaletteCleanseVisible, setIsPaletteCleanseVisible] = useState(() => window.localStorage.getItem('buyCleanPaletteCleanse') !== 'false');
   const [isSmoothScroll, setIsSmoothScroll] = useState(true);
   const [isAccordionMoved, setIsAccordionMoved] = useState(false);
@@ -2132,7 +2133,7 @@ export default function BuyCleanPage() {
   }), [layoutVariables]);
 
   useEffect(() => {
-    const mobileQuery = window.matchMedia('(max-width: 767px)');
+    const mobileQuery = window.matchMedia('(max-width: 1120px)');
     const updateMobileViewport = () => setIsMobileViewport(mobileQuery.matches);
 
     updateMobileViewport();
@@ -2244,6 +2245,15 @@ export default function BuyCleanPage() {
   }, [isGreySpacerVisible]);
 
   useEffect(() => {
+    const defaultVariables = layouts[activeLayout]?.variables || {};
+
+    setLayoutVariables((current) => ({
+      ...defaultVariables,
+      ...current,
+    }));
+  }, [activeLayout]);
+
+  useEffect(() => {
     const stage = paletteStageRef.current;
 
     if (!isPaletteCleanseVisible || !stage) {
@@ -2251,7 +2261,7 @@ export default function BuyCleanPage() {
       return undefined;
     }
 
-    const desktopQuery = window.matchMedia('(min-width: 768px)');
+    const desktopQuery = window.matchMedia('(min-width: 1121px)');
     let animationFrame = 0;
 
     const updateScale = () => {
