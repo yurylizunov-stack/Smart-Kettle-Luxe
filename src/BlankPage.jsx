@@ -594,6 +594,10 @@ const mobileTechSpecsFramePath = (frame) => (
 );
 const desktopTechSpecsEndFrame = 71;
 const desktopTechSpecsFramePath = mobileTechSpecsFramePath;
+const desktopTechnicalSpecsSequenceEndFrame = 71;
+const desktopTechnicalSpecsSequenceFramePath = (frame) => (
+  `/assets/sequences/xyz/explode_${String(frame).padStart(5, '0')}.webp`
+);
 const varietalEndFrame = 79;
 const varietalFramePath = (frame) => (
   `/assets/sequences/featuress a  update 1/1_${String(frame).padStart(5, '0')}.jpg`
@@ -3437,6 +3441,177 @@ function BlankDesktopWhatsIncluded() {
   );
 }
 
+const desktopTechnicalSpecColumns = [
+  [
+    {
+      label: 'Dimensions (WxDxH)',
+      value: '7.1" x 9.6" x 9.9"',
+    },
+    {
+      label: 'Construction Materials',
+      value: 'Brushed Stainless Steel',
+    },
+    {
+      label: 'Capacity',
+      value: '57 oz. / 1.7 liter / 7 Cup Capacity',
+    },
+  ],
+  [
+    {
+      label: 'Settings',
+      value: [
+        '5 Preprogrammed Temperature Settings',
+        'Keep Warm Button',
+        'Auto shut off and boil dry protection',
+      ],
+    },
+    {
+      label: 'Power',
+      value: '1500 Watts',
+    },
+  ],
+  [
+    {
+      label: 'Voltage',
+      value: '110-120 Volts',
+    },
+    {
+      label: 'Warranty',
+      value: '1 Year Limited Warranty',
+      isLargeLabel: true,
+    },
+    {
+      label: 'Weight',
+      value: '3.86 lbs / 1.75 kg',
+    },
+  ],
+];
+
+function BlankDesktopTechnicalSpecifications() {
+  return (
+    <section
+      className="blank-technical-specs"
+      aria-label="Technical Specifications"
+      data-node-id="11780:5888"
+    >
+      <header className="blank-technical-specs__header" data-node-id="11780:5889">
+        <h2 data-node-id="11780:5891">Technical Specifications</h2>
+      </header>
+
+      <div className="blank-technical-specs__content" data-node-id="11780:5896">
+        {desktopTechnicalSpecColumns.map((column, columnIndex) => (
+          <div className="blank-technical-specs__column" data-node-id={`11780:${5897 + (columnIndex * 10)}`} key={`spec-column-${columnIndex + 1}`}>
+            {column.map((item) => (
+              <div className="blank-technical-specs__item" key={item.label}>
+                <h3 className={item.isLargeLabel ? 'is-large' : undefined}>{item.label}</h3>
+                {Array.isArray(item.value) ? (
+                  <div className="blank-technical-specs__value-list">
+                    {item.value.map((value) => (
+                      <p key={value}>{value}</p>
+                    ))}
+                  </div>
+                ) : (
+                  <p>{item.value}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function BlankDesktopTechnicalSpecsSequence() {
+  const sectionRef = useRef(null);
+  const imageRef = useRef(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    const image = imageRef.current;
+
+    if (!section || !image) {
+      return undefined;
+    }
+
+    const isMobileLayout = window.matchMedia('(max-width: 767px)').matches;
+
+    if (isMobileLayout) {
+      return undefined;
+    }
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cancelSequenceWarmup = warmSequenceFrames(
+      desktopTechnicalSpecsSequenceFramePath,
+      0,
+      desktopTechnicalSpecsSequenceEndFrame,
+      72,
+    );
+
+    const drawFrame = (frame) => {
+      const frameIndex = gsap.utils.clamp(0, desktopTechnicalSpecsSequenceEndFrame, Math.round(frame));
+      const source = desktopTechnicalSpecsSequenceFramePath(frameIndex);
+
+      setSequenceImageFrame(image, source, frameIndex);
+    };
+
+    const firstFrame = warmImage(desktopTechnicalSpecsSequenceFramePath(0), 'high');
+    const handleFirstFrameLoad = () => drawFrame(0);
+
+    if (firstFrame.complete && firstFrame.naturalWidth > 0) {
+      drawFrame(0);
+    } else {
+      firstFrame.addEventListener('load', handleFirstFrameLoad, { once: true });
+      drawFrame(0);
+    }
+
+    if (reduceMotion) {
+      return () => {
+        cancelSequenceWarmup();
+        firstFrame.removeEventListener('load', handleFirstFrameLoad);
+      };
+    }
+
+    const context = gsap.context(() => {
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: 0.55,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => drawFrame(self.progress * desktopTechnicalSpecsSequenceEndFrame),
+        onRefresh: (self) => drawFrame(self.progress * desktopTechnicalSpecsSequenceEndFrame),
+        onLeave: () => drawFrame(desktopTechnicalSpecsSequenceEndFrame),
+        onLeaveBack: () => drawFrame(0),
+      });
+    }, section);
+
+    ScrollTrigger.refresh();
+
+    return () => {
+      cancelSequenceWarmup();
+      firstFrame.removeEventListener('load', handleFirstFrameLoad);
+      context.revert();
+    };
+  }, []);
+
+  return (
+    <section className="blank-technical-specs-sequence" aria-label="Technical specification exploded view" ref={sectionRef}>
+      <figure className="blank-technical-specs-sequence__frame" aria-hidden="true">
+        <img
+          src={desktopTechnicalSpecsSequenceFramePath(0)}
+          alt=""
+          data-frame="0"
+          decoding="async"
+          fetchPriority="high"
+          onError={(event) => retrySequenceImage(event.currentTarget)}
+          ref={imageRef}
+        />
+      </figure>
+    </section>
+  );
+}
+
 function BlankDesktopTechSpecs() {
   const sectionRef = useRef(null);
   const imageRef = useRef(null);
@@ -4536,11 +4711,11 @@ export default function BlankPage({
       {showDesktopSupportDocumentation ? <BlankMobileSupportDocumentation /> : null}
       {showDesktopFAQ ? <BlankMobileFAQ /> : null}
 
-      {showDesktopTechSpecs ? <div className="blank-tech-specs-offset" aria-hidden="true" /> : null}
-
-      {showDesktopTechSpecs ? <BlankDesktopTechSpecs /> : null}
-
       {showDesktopWhatsIncluded ? <BlankDesktopWhatsIncluded /> : null}
+
+      {showDesktopWhatsIncluded ? <BlankDesktopTechnicalSpecifications /> : null}
+
+      {showDesktopWhatsIncluded ? <BlankDesktopTechnicalSpecsSequence /> : null}
 
       {showDesktopReviewHighlights ? <BlankDesktopReviewHighlights /> : null}
 
