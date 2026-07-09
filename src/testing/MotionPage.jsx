@@ -109,7 +109,7 @@ const motionElevateImages = Array.from({ length: 7 }, (_, index) => {
   const imageNumber = String(index + 1).padStart(2, '0');
 
   return {
-    desktop: `/assets/images/motion-elevate/elevate-${imageNumber}-desktop.jpg`,
+    desktop: `/assets/images/luxe%20sq/luxe%20sq%20${index + 1}.png`,
     mobile: `/assets/images/motion-elevate/elevate-${imageNumber}-mobile.jpg`,
   };
 });

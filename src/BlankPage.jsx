@@ -352,19 +352,39 @@ function BlankHeroOnlySection() {
 
 const galleryImages = [
   {
-    desktop: '/assets/images/gallery/galery_d_1.png',
+    desktop: '/assets/images/luxe%20sq/luxe%20sq%201.png',
     mobile: '/assets/images/gallery/galery_m_1.png',
-    alt: 'Smart Kettle Luxe detail in a warm kitchen setting',
+    alt: 'Smart Kettle Luxe in a square lifestyle gallery setting',
   },
   {
-    desktop: '/assets/images/gallery/galery_d_2.png',
+    desktop: '/assets/images/luxe%20sq/luxe%20sq%202.png',
     mobile: '/assets/images/gallery/galery_m_2.png',
-    alt: 'Smart Kettle Luxe with premium finish on a countertop',
+    alt: 'Smart Kettle Luxe control base detail in a square gallery image',
   },
   {
-    desktop: '/assets/images/gallery/galery_d_3.png',
+    desktop: '/assets/images/luxe%20sq/luxe%20sq%203.png',
     mobile: '/assets/images/gallery/galery_m_3.png',
-    alt: 'Smart Kettle Luxe sculptural design detail',
+    alt: 'Smart Kettle Luxe sculptural design detail in a square gallery image',
+  },
+  {
+    desktop: '/assets/images/luxe%20sq/luxe%20sq%204.png',
+    mobile: '/assets/images/gallery/galery_m_1.png',
+    alt: 'Smart Kettle Luxe premium finish square gallery image',
+  },
+  {
+    desktop: '/assets/images/luxe%20sq/luxe%20sq%205.png',
+    mobile: '/assets/images/gallery/galery_m_2.png',
+    alt: 'Smart Kettle Luxe kitchen counter square gallery image',
+  },
+  {
+    desktop: '/assets/images/luxe%20sq/luxe%20sq%206.png',
+    mobile: '/assets/images/gallery/galery_m_3.png',
+    alt: 'Smart Kettle Luxe lifestyle square gallery image',
+  },
+  {
+    desktop: '/assets/images/luxe%20sq/luxe%20sq%207.png',
+    mobile: '/assets/images/gallery/galery_m_1.png',
+    alt: 'Smart Kettle Luxe close-up square gallery image',
   },
 ];
 
