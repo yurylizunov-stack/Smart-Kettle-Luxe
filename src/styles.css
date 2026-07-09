@@ -4489,6 +4489,7 @@ body {
     display: grid;
     grid-template-columns: repeat(10, minmax(0, 1fr));
     gap: 20px;
+    align-items: stretch;
   }
 
   .buy-clean-page.is-responsive .buy-clean-support-card--large {
@@ -4507,6 +4508,24 @@ body {
     grid-column: span 4;
     width: auto;
     min-width: 0;
+    height: 100%;
+    align-self: stretch;
+  }
+
+  .buy-clean-page.is-responsive .buy-clean-support-card--small {
+    flex: 1 1 0;
+    min-height: 0;
+    grid-template-columns: 1fr 260px;
+  }
+
+  .buy-clean-page.is-responsive .buy-clean-support-card--small img:not(.buy-clean-support-card__arrow) {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    bottom: 24px;
+    width: 260px;
+    height: calc(100% - 48px);
+    object-fit: contain;
   }
 }
 
@@ -14582,6 +14601,24 @@ body:has(.testing-page--two) {
   .blank-page .motion-elevate-strip--with-after-heading.motion-elevate-strip--without-rail .blank-color-selector__hero,
   .blank-page .motion-elevate-strip--with-after-heading.motion-elevate-strip--without-rail .blank-color-selector__swatches {
     background: transparent;
+  }
+
+  .blank-page .motion-elevate-strip--with-after-heading.motion-elevate-strip--without-rail {
+    gap: 0;
+    min-height: 155vh;
+    min-height: 155svh;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .blank-page .motion-elevate-strip--without-rail .motion-elevate-strip__heading {
+    height: 100vh;
+    height: 100svh;
+  }
+
+  .blank-page .motion-elevate-strip--with-after-heading.motion-elevate-strip--without-rail .blank-color-selector {
+    margin-top: -45vh;
+    margin-top: -45svh;
   }
 }
 
@@ -25873,11 +25910,21 @@ html:has(.hero-only-page)::-webkit-scrollbar {
 
   .blank-page .motion-elevate-strip--with-after-heading.motion-elevate-strip--without-rail {
     gap: 0;
+    min-height: 155vh;
+    min-height: 155svh;
     padding: 0;
+    overflow: visible;
   }
 
   .blank-page .motion-elevate-strip--without-rail .motion-elevate-strip__heading {
+    height: 100vh;
+    height: 100svh;
     padding: 0 var(--blank-lg-page-margin);
+  }
+
+  .blank-page .motion-elevate-strip--with-after-heading.motion-elevate-strip--without-rail .blank-color-selector {
+    margin-top: -45vh;
+    margin-top: -45svh;
   }
 
   .blank-page .motion-elevate-strip__rail {
