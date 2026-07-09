@@ -16,6 +16,7 @@ const STANDARD_PRICE = 219.95;
 const BRASS_PRICE = 249.95;
 const MAX_QUANTITY = 3;
 const UPDATE_3_PATH = '/update-3';
+const PALETTE_CLEANSE_STORAGE_KEY = 'buyCleanPaletteCleanseDefaultOff';
 
 function useDragScrollHandlers(viewportRef, { allowTouch = false } = {}) {
   const dragRef = useRef(null);
@@ -2091,7 +2092,9 @@ export default function BuyCleanPage() {
     return window.matchMedia('(max-width: 1120px)').matches || storedResponsive === 'true';
   });
   const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 1120px)').matches);
-  const [isPaletteCleanseVisible, setIsPaletteCleanseVisible] = useState(() => window.localStorage.getItem('buyCleanPaletteCleanse') !== 'false');
+  const [isPaletteCleanseVisible, setIsPaletteCleanseVisible] = useState(() => (
+    window.localStorage.getItem(PALETTE_CLEANSE_STORAGE_KEY) === 'true'
+  ));
   const [isSmoothScroll, setIsSmoothScroll] = useState(true);
   const [isAccordionMoved, setIsAccordionMoved] = useState(false);
   const [isGreySpacerVisible, setIsGreySpacerVisible] = useState(false);
@@ -2229,7 +2232,7 @@ export default function BuyCleanPage() {
   }, [isResponsive]);
 
   useEffect(() => {
-    window.localStorage.setItem('buyCleanPaletteCleanse', String(isPaletteCleanseVisible));
+    window.localStorage.setItem(PALETTE_CLEANSE_STORAGE_KEY, String(isPaletteCleanseVisible));
   }, [isPaletteCleanseVisible]);
 
   useEffect(() => {
